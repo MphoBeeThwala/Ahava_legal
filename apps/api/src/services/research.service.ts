@@ -167,6 +167,12 @@ export async function createDraft(
   const { question, additionalFacts } = parse(researchDraftSchema, input);
   const matter = await requireCase(caseRef);
   const intake = matter.intakeSubmissionId ? await intakeOf(matter.intakeSubmissionId) : null;
+  if (intake && intake.consentToAi === false) {
+    throw httpError(
+      'The client did not consent to AI assessment and research on this matter, so AI research is not available.',
+      409,
+    );
+  }
   const facts = [intake?.matterSummary, additionalFacts].filter(Boolean).join('\n\n');
   const text = [
     `Research question:\n${question}`,

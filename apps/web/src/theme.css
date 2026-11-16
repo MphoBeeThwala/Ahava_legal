@@ -696,3 +696,121 @@ label:has(> input:not([type='checkbox']):not([type='radio'])) {
     display: none;
   }
 }
+
+fieldset.consent-stack {
+  margin: 0;
+  min-width: 0;
+}
+
+fieldset.consent-stack legend {
+  padding: 0 6px;
+}
+
+/* ---------------------------------------------------------------- section menu
+ * Wide screens: the section buttons in a bar. Narrower screens: a Menu button
+ * (three lines) at the top right opens them as a list.
+ */
+
+.workspace-nav-inner {
+  position: relative;
+}
+
+.workspace-nav .nav-links {
+  order: 1;
+}
+
+.workspace-nav .breadcrumb {
+  order: 2;
+}
+
+.nav-menu-button {
+  order: 3;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-menu-button:hover {
+  background: var(--brand-softer);
+}
+
+.nav-menu-icon {
+  display: inline-grid;
+  gap: 4px;
+  width: 18px;
+}
+
+.nav-menu-icon span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.workspace-nav-open .nav-menu-icon span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.workspace-nav-open .nav-menu-icon span:nth-child(2) {
+  opacity: 0;
+}
+
+.workspace-nav-open .nav-menu-icon span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+@media (max-width: 1180px) {
+  .workspace-nav .workspace-nav-inner {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .workspace-nav .breadcrumb {
+    order: 1;
+    margin-right: auto;
+    width: auto;
+  }
+
+  .nav-menu-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .workspace-nav .nav-links {
+    display: none;
+  }
+
+  .workspace-nav-open .nav-links {
+    order: 4;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 8px;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(560px, 100%);
+    padding: 12px;
+    border-radius: 18px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow);
+    z-index: 50;
+  }
+
+  .workspace-nav-open .nav-link {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}

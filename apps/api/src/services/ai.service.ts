@@ -128,6 +128,8 @@ export interface TriageInput {
   requestedOutcome?: string;
   documentsMentioned?: string;
   people: KnownPerson[];
+  /** false: the client declined AI; nothing is sent to a model. */
+  consentToAi?: boolean;
 }
 
 export interface AiAssessment {
@@ -189,23 +191,33 @@ const TRIAGE_SYSTEM = [
   'complianceFlags (string[]), nextActions (string[]), confidence (number 0-1).',
 ].join(' ');
 
-/** No model configured: an honest "not assessed" record, never invented advice. */
-function notAssessed(input: TriageInput): AiAssessment {
+/**
+ * No AI (none configured, or the client declined it): an honest "not
+ * assessed" record, never invented advice.
+ */
+function notAssessed(input: TriageInput, reason: 'not_configured' | 'no_consent'): AiAssessment {
   const hint = input.urgencyHint.toLowerCase();
+  const why =
+    reason === 'no_consent'
+      ? 'the client did not consent to AI assessment and research'
+      : 'AI is not configured for this platform';
   return {
     provider: 'none',
     model: 'none',
     matterType: input.practiceArea || 'General',
     urgency: URGENCIES.includes(hint) ? hint : 'medium',
-    summary:
-      'Not assessed by AI (AI is not configured for this platform). An attorney must review the intake.',
+    summary: `Not assessed by AI (${why}). An attorney must review the intake.`,
     keyFacts: [],
     attorneyQuestions: [],
     recommendedDocuments: [],
     complianceFlags: [],
     nextActions: ['Attorney to review the intake and confirm next steps.'],
     confidence: 0,
-    popiaNotes: ['No information was sent to an AI service.'],
+    popiaNotes: [
+      reason === 'no_consent'
+        ? 'No information was sent to an AI service: the client did not consent.'
+        : 'No information was sent to an AI service.',
+    ],
   };
 }
 
@@ -226,8 +238,11 @@ export async function triage(
 ): Promise<TriageOutcome> {
   const brief = triageBrief(input);
   const sent = { text: brief.text, replacements: brief.replacements };
+  if (input.consentToAi === false) {
+    return { assessment: notAssessed(input, 'no_consent'), brief: sent };
+  }
   if (!aiConfigured()) {
-    return { assessment: notAssessed(input), brief: sent };
+    return { assessment: notAssessed(input, 'not_configured'), brief: sent };
   }
   const result = await callModel(
     {

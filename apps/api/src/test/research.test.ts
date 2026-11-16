@@ -90,6 +90,30 @@ describe('triage', () => {
     expect(res.body.assessment.attorneyQuestions).toEqual([]);
   });
 
+  test("without the client's AI consent the intake is taken but never sent to AI", async () => {
+    setAiClient(fakeModel(() => TRIAGE_ANSWER));
+    const created = await request(app)
+      .post('/api/intake/submissions')
+      .set(attorney.auth)
+      .send({ ...intake, email: 'no.ai@example.co.za', consentToAi: false });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    const res = await request(app)
+      .post(`/api/intake/submissions/${created.body.id}/assess`)
+      .set(attorney.auth);
+    expect(res.status, JSON.stringify(res.body)).toBeLessThan(300);
+    expect(res.body.assessment).toMatchObject({ provider: 'none', confidence: 0 });
+    expect(res.body.assessment.summary).toMatch(/Not assessed by AI \(the client did not consent/);
+    expect(sent).toHaveLength(0);
+
+    const research = await request(app)
+      .post(`/api/cases/${res.body.matterCase.id}/research`)
+      .set(attorney.auth)
+      .send({ question: 'Was the lockout lawful?' });
+    expect(research.status).toBe(409);
+    expect(research.body.message).toMatch(/did not consent/);
+    expect(sent).toHaveLength(0);
+  });
+
   test('the model only ever sees the de-identified intake, and every call is metered', async () => {
     setAiClient(fakeModel(() => TRIAGE_ANSWER));
     const id = await submitIntake();

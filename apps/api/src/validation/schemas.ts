@@ -151,14 +151,9 @@ export const intakeSubmissionSchema = z.object({
   documentsMentioned: optionalText(MAX_TEXT).transform((value) => value ?? ''),
   urgencyHint: optionalText(40).transform((value) => value ?? 'unspecified'),
   preferredLanguage: optionalText(40).transform((value) => value ?? 'English'),
-  consentToAi: z.literal(
-    true,
-    'Consent for storage and AI assessment is required before submission',
-  ),
-  consentToStorage: z.literal(
-    true,
-    'Consent for storage and AI assessment is required before submission',
-  ),
+  /** Without it the intake is still taken, marked "not assessed by AI". */
+  consentToAi: z.boolean('Record whether the client consents to AI assessment and research'),
+  consentToStorage: z.literal(true, 'Consent to store the client record is required'),
 });
 export type IntakeSubmission = z.infer<typeof intakeSubmissionSchema>;
 

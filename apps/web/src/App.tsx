@@ -240,19 +240,38 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
 
-  const sectionRefs = useRef<Partial<Record<SectionId, HTMLElement | null>>>({});
-  const headerRef = useRef<HTMLDivElement | null>(null);
-  const clickedAt = useRef({ at: 0 });
   const [headerCondensed, setHeaderCondensed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
+
+  // The section menu closes on Escape or a click outside it.
+  useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    const onPointer = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('mousedown', onPointer);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('mousedown', onPointer);
+    };
+  }, [menuOpen]);
   const workspaceReady = useMemo(() => Boolean(currentUser), [currentUser]);
 
-  const scrollToSection = useCallback((sectionId: SectionId) => {
-    const node = sectionRefs.current[sectionId];
-    if (node) {
-      clickedAt.current = { at: Date.now() };
-      node.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setActiveSection(sectionId);
+  /** Shows one section of the workspace (one view at a time, not one long page). */
+  const showSection = useCallback((sectionId: SectionId) => {
+    setActiveSection(sectionId);
+    setMenuOpen(false);
+    if (window.location.hash !== `#${sectionId}`) {
+      window.history.pushState(null, '', `#${sectionId}`);
     }
+    window.scrollTo({ top: 0 });
   }, []);
 
   const loadWorkspace = async (user: PublicUser | null = currentUser) => {
@@ -362,40 +381,29 @@ function App() {
       return undefined;
     }
 
-    // The active section is the one whose top most recently passed under the
-    // pinned header. Right after a nav click, the clicked section wins (a
-    // section near the bottom of the page may never reach the top).
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      setHeaderCondensed(window.scrollY > 40);
-      if (Date.now() - clickedAt.current.at < 1200) {
-        return;
+    // The address bar remembers the section (#clients), so Back and links work.
+    const fromHash = () => {
+      const id = window.location.hash.slice(1);
+      if (NAV_SECTIONS.some((section) => section.id === id)) {
+        setActiveSection(id as SectionId);
       }
-      const offset = (headerRef.current?.offsetHeight ?? 0) + 32;
-      // Two columns: the section whose top is nearest the header (and past it).
-      let current: SectionId = 'overview';
-      let nearest = -Infinity;
-      for (const { id } of NAV_SECTIONS) {
-        const top = sectionRefs.current[id]?.getBoundingClientRect().top;
-        if (top !== undefined && top <= offset && top > nearest) {
-          nearest = top;
-          current = id;
-        }
-      }
-      setActiveSection(current);
     };
+    fromHash();
+    window.addEventListener('popstate', fromHash);
+
+    let frame = 0;
     const onScroll = () => {
       if (!frame) {
-        frame = window.requestAnimationFrame(update);
+        frame = window.requestAnimationFrame(() => {
+          frame = 0;
+          setHeaderCondensed(window.scrollY > 40);
+        });
       }
     };
-    update();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
     return () => {
+      window.removeEventListener('popstate', fromHash);
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
       if (frame) {
         window.cancelAnimationFrame(frame);
       }
@@ -459,7 +467,7 @@ function App() {
       setSelectedCaseId(caseKey);
       const { data } = await api.get(`/cases/${caseKey}`);
       setSelectedMatter(data);
-      scrollToSection('cases');
+      showSection('cases');
     } catch (error) {
       setAuthNotice({
         tone: 'error',
@@ -540,16 +548,48 @@ function App() {
     );
   }
 
+  const visibleSections = NAV_SECTIONS.filter(
+    ({ permission }) => !permission || currentUser.permissions.includes(permission),
+  );
+  // A section the user can't see (e.g. from an old link) falls back to the overview.
   const activeNav =
-    NAV_SECTIONS.find((section) => section.id === activeSection) ?? NAV_SECTIONS[0]!;
+    visibleSections.find((section) => section.id === activeSection) ?? NAV_SECTIONS[0]!;
   const activeLabel = activeNav.label;
+  const view = activeNav.id;
+  const can = (permission: Permission) => currentUser.permissions.includes(permission);
+
+  const assessmentCard =
+    selectedMatter &&
+    'submissionId' in selectedMatter &&
+    selectedMatter.submissionId === null ? null : (
+      <ErrorBoundary label="Assessment">
+        <AssessmentCard
+          matter={selectedMatter}
+          onGoToIntake={() => showSection('intake')}
+          onGoToCases={() => showSection('cases')}
+        />
+      </ErrorBoundary>
+    );
+
+  const recentMatters = (
+    <div className="panel">
+      <div className="panel-head">
+        <div>
+          <p className="panel-kicker">Case management</p>
+          <h2>Recent matters</h2>
+        </div>
+      </div>
+      <CaseTable
+        cases={cases}
+        onSelectCase={handleSelectCase}
+        onGoToIntake={() => showSection('intake')}
+      />
+    </div>
+  );
 
   return (
     <div className="app-shell">
-      <div
-        className={`workspace-header ${headerCondensed ? 'workspace-header-condensed' : ''}`}
-        ref={headerRef}
-      >
+      <div className={`workspace-header ${headerCondensed ? 'workspace-header-condensed' : ''}`}>
         <header className="hero hero-compact">
           <div className="hero-copy">
             <BrandMark branding={branding} />
@@ -574,26 +614,42 @@ function App() {
           </div>
         </header>
 
-        <nav className="workspace-nav" aria-label="Workspace sections">
+        <nav
+          ref={navRef}
+          className={`workspace-nav ${menuOpen ? 'workspace-nav-open' : ''}`}
+          aria-label="Workspace sections"
+        >
           <div className="workspace-nav-inner">
-            <div className="nav-links">
-              {NAV_SECTIONS.filter(
-                ({ permission }) => !permission || currentUser.permissions.includes(permission),
-              ).map(({ id, label }) => (
+            <div className="breadcrumb" aria-label="Current section">
+              <span className="breadcrumb-label">You are in</span>
+              <strong>{activeLabel}</strong>
+            </div>
+            <button
+              type="button"
+              className="nav-menu-button"
+              aria-expanded={menuOpen}
+              aria-controls="workspace-nav-links"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <span className="nav-menu-icon" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              Menu
+            </button>
+            <div className="nav-links" id="workspace-nav-links">
+              {visibleSections.map(({ id, label }) => (
                 <button
                   key={id}
                   type="button"
                   className={`nav-link ${activeSection === id ? 'nav-link-active' : ''}`}
-                  onClick={() => scrollToSection(id)}
+                  onClick={() => showSection(id)}
                   aria-current={activeSection === id ? 'page' : undefined}
                 >
                   {label}
                 </button>
               ))}
-            </div>
-            <div className="breadcrumb" aria-label="Current section">
-              <span className="breadcrumb-label">You are in</span>
-              <strong>{activeLabel}</strong>
             </div>
           </div>
         </nav>
@@ -612,280 +668,191 @@ function App() {
         onDismiss={() => setAuthNotice({ tone: 'info', message: '' })}
       />
 
-      <main className="dashboard">
+      <main className="dashboard" id="workspace-main" aria-label={activeNav.title}>
         <SubscriptionBanner canManage={hasPermission(currentUser.role, 'subscription.manage')} />
-        {currentUser.permissions.includes('users.manage') ? (
-          <ErrorBoundary label="Firm setup">
-            <OnboardingWizard currentUser={currentUser} onChanged={refreshBranding} />
-          </ErrorBoundary>
-        ) : null}
-        <section
-          id="section-overview"
-          className="dashboard-section"
-          data-section="overview"
-          ref={(node) => {
-            sectionRefs.current.overview = node;
-          }}
-        >
-          <div className="summary-grid">
-            <StatCard
-              label="Open intakes"
-              value={summary?.openIntakes ?? 0}
-              detail="New matters waiting for attorney triage"
-              tone="mint"
-            />
-            <StatCard
-              label="AI assessed"
-              value={summary?.assessedIntakes ?? 0}
-              detail="Redacted briefs analyzed server-side"
-              tone="blue"
-            />
-            <StatCard
-              label="Live matters"
-              value={summary?.liveCases ?? 0}
-              detail="Cases created from intake submissions"
-              tone="gold"
-            />
-            <StatCard
-              label="Critical"
-              value={summary?.criticalMatters ?? 0}
-              detail="Priority reviews needing immediate attention"
-              tone="rose"
-            />
-          </div>
-        </section>
 
-        <section className="content-grid">
-          <div className="primary-column">
-            <section
-              id="section-intake"
-              className="dashboard-section"
-              data-section="intake"
-              ref={(node) => {
-                sectionRefs.current.intake = node;
-              }}
-            >
+        {view === 'overview' ? (
+          <>
+            {can('users.manage') ? (
+              <ErrorBoundary label="Firm setup">
+                <OnboardingWizard currentUser={currentUser} onChanged={refreshBranding} />
+              </ErrorBoundary>
+            ) : null}
+            <section className="dashboard-section" data-section="overview">
+              <div className="summary-grid">
+                <StatCard
+                  label="Open intakes"
+                  value={summary?.openIntakes ?? 0}
+                  detail="New matters waiting for attorney triage"
+                  tone="mint"
+                />
+                <StatCard
+                  label="AI assessed"
+                  value={summary?.assessedIntakes ?? 0}
+                  detail="Redacted briefs analyzed server-side"
+                  tone="blue"
+                />
+                <StatCard
+                  label="Live matters"
+                  value={summary?.liveCases ?? 0}
+                  detail="Cases created from intake submissions"
+                  tone="gold"
+                />
+                <StatCard
+                  label="Critical"
+                  value={summary?.criticalMatters ?? 0}
+                  detail="Priority reviews needing immediate attention"
+                  tone="rose"
+                />
+              </div>
+            </section>
+            <section className="content-grid">
+              <div className="primary-column">{recentMatters}</div>
+              <aside className="secondary-column">
+                <div className="panel compliance-panel">
+                  <p className="panel-kicker">POPIA controls</p>
+                  <h2>How the AI path stays safer</h2>
+                  <ul className="compliance-list">
+                    <li>Raw intake payloads are encrypted before persistence.</li>
+                    <li>Only a redacted matter brief is sent to the model.</li>
+                    <li>Nothing goes to AI without the client&rsquo;s consent.</li>
+                    <li>Assessment output is attorney-facing, not client-facing.</li>
+                  </ul>
+                </div>
+              </aside>
+            </section>
+          </>
+        ) : null}
+
+        {view === 'intake' ? (
+          <section className="content-grid" data-section="intake">
+            <div className="primary-column">
               <div className="panel">
                 <div className="panel-head">
                   <div>
                     <p className="panel-kicker">Client intake</p>
                     <h2>Collect the matter, redact PII, then assess it</h2>
                   </div>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() =>
-                      setAuthNotice({
-                        tone: 'info',
-                        message:
-                          'Use the sample matter to test the full encrypted intake and assessment flow.',
-                      })
-                    }
-                  >
-                    Review flow
-                  </button>
                 </div>
-
-                {currentUser.permissions.includes('intake.write') ? (
+                {can('intake.write') ? (
                   <IntakeForm
                     onSubmit={handleSubmit}
                     busy={busy}
                     sampleMatter={sampleMatter}
-                    onGoToCases={() => scrollToSection('cases')}
+                    onGoToCases={() => showSection('cases')}
                   />
                 ) : (
                   <p className="field-hint">Your role can view matters but not take new intakes.</p>
                 )}
               </div>
-            </section>
-
-            {currentUser.permissions.includes('clients.read') ? (
-              <section
-                id="section-clients"
-                className="dashboard-section"
-                data-section="clients"
-                ref={(node) => {
-                  sectionRefs.current.clients = node;
-                }}
-              >
-                <ErrorBoundary label="Clients">
-                  <ClientsPanel
-                    currentUser={currentUser}
-                    onMatterOpened={(matter) => {
-                      loadWorkspace().catch(() => undefined);
-                      handleSelectCase(matter);
-                    }}
-                  />
-                </ErrorBoundary>
-              </section>
-            ) : null}
-
-            <section
-              id="section-cases"
-              className="dashboard-section"
-              data-section="cases"
-              ref={(node) => {
-                sectionRefs.current.cases = node;
-              }}
-            >
-              <div className="panel">
-                <div className="panel-head">
-                  <div>
-                    <p className="panel-kicker">Case management</p>
-                    <h2>Recent matters</h2>
-                  </div>
-                </div>
-                <CaseTable
-                  cases={cases}
-                  onSelectCase={handleSelectCase}
-                  onGoToIntake={() => scrollToSection('intake')}
-                />
-              </div>
-            </section>
-
-            {currentUser.permissions.includes('time.read') ? (
-              <section
-                id="section-time"
-                className="dashboard-section"
-                data-section="time"
-                ref={(node) => {
-                  sectionRefs.current.time = node;
-                }}
-              >
-                <ErrorBoundary label="Time">
-                  <TimePanel
-                    currentUser={currentUser}
-                    cases={cases}
-                    selectedCaseId={selectedCaseId}
-                  />
-                </ErrorBoundary>
-              </section>
-            ) : null}
-
-            {currentUser.permissions.includes('trust.read') ? (
-              <section
-                id="section-trust"
-                className="dashboard-section"
-                data-section="trust"
-                ref={(node) => {
-                  sectionRefs.current.trust = node;
-                }}
-              >
-                <ErrorBoundary label="Trust accounting">
-                  <TrustPanel currentUser={currentUser} cases={cases} />
-                </ErrorBoundary>
-              </section>
-            ) : null}
-          </div>
-
-          <aside className="secondary-column">
-            {selectedMatter &&
-            'submissionId' in selectedMatter &&
-            selectedMatter.submissionId === null ? null : (
-              <ErrorBoundary label="Assessment">
-                <AssessmentCard
-                  matter={selectedMatter}
-                  onGoToIntake={() => scrollToSection('intake')}
-                  onGoToCases={() => scrollToSection('cases')}
-                />
-              </ErrorBoundary>
-            )}
-
-            <CaseWorkspace
-              api={api}
-              selectedCaseId={selectedCaseId}
-              onSelectCase={handleSelectCase}
-              onChanged={loadWorkspace}
-              canEdit={currentUser.permissions.includes('matters.write')}
-              canEditCalendar={currentUser.permissions.includes('calendar.write')}
-              canResearch={hasPermission(currentUser.role, 'research.use')}
-              canApproveResearch={hasPermission(currentUser.role, 'research.approve')}
-              canManagePortal={hasPermission(currentUser.role, 'portal.manage')}
-              canWriteMatter={hasPermission(currentUser.role, 'matters.write')}
-              canShareDocuments={hasPermission(currentUser.role, 'documents.write')}
-            />
-
-            <section
-              id="section-operations"
-              className="dashboard-section"
-              data-section="operations"
-              ref={(node) => {
-                sectionRefs.current.operations = node;
-              }}
-            >
-              <ErrorBoundary label="Operations">
-                <OperationsHub
-                  api={api}
-                  selectedCaseId={selectedCaseId}
-                  cases={cases}
-                  currentUser={currentUser}
-                  onChanged={loadWorkspace}
-                />
-              </ErrorBoundary>
-            </section>
-
-            <div className="panel compliance-panel">
-              <p className="panel-kicker">POPIA controls</p>
-              <h2>How the AI path stays safer</h2>
-              <ul className="compliance-list">
-                <li>Raw intake payloads are encrypted before persistence.</li>
-                <li>Only a redacted matter brief is sent to the model.</li>
-                <li>Consent gates are required for both storage and AI review.</li>
-                <li>Assessment output is attorney-facing, not client-facing.</li>
-              </ul>
             </div>
-          </aside>
-        </section>
+            <aside className="secondary-column">{assessmentCard}</aside>
+          </section>
+        ) : null}
 
-        <section
-          id="section-account"
-          className="dashboard-section account-grid"
-          data-section="account"
-          ref={(node) => {
-            sectionRefs.current.account = node;
-          }}
-        >
-          <AccountPanel currentUser={currentUser} />
-          {hasPermission(currentUser.role, 'research.use') ? (
-            <ErrorBoundary label="Research sources">
-              <PrecedentsPanel canApprove={hasPermission(currentUser.role, 'research.approve')} />
+        {view === 'clients' ? (
+          <section className="dashboard-section" data-section="clients">
+            <ErrorBoundary label="Clients">
+              <ClientsPanel
+                currentUser={currentUser}
+                onMatterOpened={(matter) => {
+                  loadWorkspace().catch(() => undefined);
+                  handleSelectCase(matter);
+                }}
+              />
             </ErrorBoundary>
-          ) : null}
-          {hasPermission(currentUser.role, 'subscription.manage') ? (
-            <ErrorBoundary label="Subscription">
-              <SubscriptionPanel />
-            </ErrorBoundary>
-          ) : null}
-          {currentUser.permissions.includes('users.manage') ? (
-            <>
-              <ErrorBoundary label="Firm settings">
-                <FirmSettingsPanel onChanged={refreshBranding} />
-              </ErrorBoundary>
-              <ErrorBoundary label="Staff administration">
-                <StaffAdmin currentUser={currentUser} />
-              </ErrorBoundary>
-              <ErrorBoundary label="Records">
-                <RecordsPanel />
-              </ErrorBoundary>
-              <ErrorBoundary label="Sign-in settings">
-                <SignInSettingsPanel />
-              </ErrorBoundary>
-              <ErrorBoundary label="Support access">
-                <SupportAccessPanel platformName={branding.platform.legalName} />
-              </ErrorBoundary>
-            </>
-          ) : null}
-        </section>
+          </section>
+        ) : null}
 
-        {hasPermission(currentUser.role, 'helpdesk.use') ? (
-          <section
-            id="section-help"
-            className="dashboard-section"
-            data-section="help"
-            ref={(node) => {
-              sectionRefs.current.help = node;
-            }}
-          >
+        {view === 'cases' ? (
+          <section className="content-grid" data-section="cases">
+            <div className="primary-column">{recentMatters}</div>
+            <aside className="secondary-column">
+              {assessmentCard}
+              <CaseWorkspace
+                api={api}
+                selectedCaseId={selectedCaseId}
+                onSelectCase={handleSelectCase}
+                onChanged={loadWorkspace}
+                canEdit={can('matters.write')}
+                canEditCalendar={can('calendar.write')}
+                canResearch={hasPermission(currentUser.role, 'research.use')}
+                canApproveResearch={hasPermission(currentUser.role, 'research.approve')}
+                canManagePortal={hasPermission(currentUser.role, 'portal.manage')}
+                canWriteMatter={hasPermission(currentUser.role, 'matters.write')}
+                canShareDocuments={hasPermission(currentUser.role, 'documents.write')}
+              />
+            </aside>
+          </section>
+        ) : null}
+
+        {view === 'time' ? (
+          <section className="dashboard-section" data-section="time">
+            <ErrorBoundary label="Time">
+              <TimePanel currentUser={currentUser} cases={cases} selectedCaseId={selectedCaseId} />
+            </ErrorBoundary>
+          </section>
+        ) : null}
+
+        {view === 'trust' ? (
+          <section className="dashboard-section" data-section="trust">
+            <ErrorBoundary label="Trust accounting">
+              <TrustPanel currentUser={currentUser} cases={cases} />
+            </ErrorBoundary>
+          </section>
+        ) : null}
+
+        {view === 'operations' ? (
+          <section className="dashboard-section" data-section="operations">
+            <ErrorBoundary label="Operations">
+              <OperationsHub
+                api={api}
+                selectedCaseId={selectedCaseId}
+                cases={cases}
+                currentUser={currentUser}
+                onChanged={loadWorkspace}
+              />
+            </ErrorBoundary>
+          </section>
+        ) : null}
+
+        {view === 'account' ? (
+          <section className="dashboard-section account-grid" data-section="account">
+            <AccountPanel currentUser={currentUser} />
+            {hasPermission(currentUser.role, 'research.use') ? (
+              <ErrorBoundary label="Research sources">
+                <PrecedentsPanel canApprove={hasPermission(currentUser.role, 'research.approve')} />
+              </ErrorBoundary>
+            ) : null}
+            {hasPermission(currentUser.role, 'subscription.manage') ? (
+              <ErrorBoundary label="Subscription">
+                <SubscriptionPanel />
+              </ErrorBoundary>
+            ) : null}
+            {can('users.manage') ? (
+              <>
+                <ErrorBoundary label="Firm settings">
+                  <FirmSettingsPanel onChanged={refreshBranding} />
+                </ErrorBoundary>
+                <ErrorBoundary label="Staff administration">
+                  <StaffAdmin currentUser={currentUser} />
+                </ErrorBoundary>
+                <ErrorBoundary label="Records">
+                  <RecordsPanel />
+                </ErrorBoundary>
+                <ErrorBoundary label="Sign-in settings">
+                  <SignInSettingsPanel />
+                </ErrorBoundary>
+                <ErrorBoundary label="Support access">
+                  <SupportAccessPanel platformName={branding.platform.legalName} />
+                </ErrorBoundary>
+              </>
+            ) : null}
+          </section>
+        ) : null}
+
+        {view === 'help' ? (
+          <section className="dashboard-section" data-section="help">
             <ErrorBoundary label="Help">
               <HelpPanel />
             </ErrorBoundary>
