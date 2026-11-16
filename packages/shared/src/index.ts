@@ -126,7 +126,9 @@ export type Permission =
   | 'trust.authorise'
   | 'portal.manage'
   | 'helpdesk.use'
-  | 'helpdesk.manage';
+  | 'helpdesk.manage'
+  | 'drafting.use'
+  | 'drafting.approve';
 
 const FEE_EARNER: readonly Permission[] = [
   'clients.read',
@@ -153,6 +155,8 @@ const FEE_EARNER: readonly Permission[] = [
   // Prepares de-identified research briefs on matters they can see.
   'research.use',
   'helpdesk.use',
+  // Drafts documents from the standard templates (an attorney finalises them).
+  'drafting.use',
 ];
 
 /** What each role may do within its firm. Matter-level access narrows this further. */
@@ -177,6 +181,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     // The firm's own subscription to the platform (plan, seats, payment).
     'subscription.manage',
     'research.approve',
+    'drafting.approve',
     'trust.read',
     'trust.record',
     'trust.authorise',
@@ -186,7 +191,14 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
   ],
   // Attorneys sign off research memos and precedents (paralegals prepare them).
   // Practitioners authorise trust payments and sign off reconciliations.
-  attorney: [...FEE_EARNER, 'research.approve', 'trust.read', 'trust.authorise', 'portal.manage'],
+  attorney: [
+    ...FEE_EARNER,
+    'research.approve',
+    'drafting.approve',
+    'trust.read',
+    'trust.authorise',
+    'portal.manage',
+  ],
   paralegal: FEE_EARNER,
   secretary: [
     'clients.read',
@@ -200,6 +212,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     'matters.read',
     'documents.read',
     'documents.write',
+    'drafting.use',
     'calendar.read',
     'calendar.write',
     'notifications.read',
@@ -2316,3 +2329,5 @@ export interface FeeEarnerSummaryRow {
 export interface FeeEarnerReport extends ReportPeriod {
   rows: FeeEarnerSummaryRow[];
 }
+
+export * from './drafting';

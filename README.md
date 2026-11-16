@@ -169,6 +169,14 @@ When the firms table is empty, the server creates a `default` firm from these va
 - **Encryption:** subjects, notes and line descriptions can name people, so they are encrypted with the firm's key. Amounts, numbers and dates stay readable for reports.
 - **Not covered:** trust accounting under the Legal Practice Act (section 86) is not built yet. The trust/operating ledger is a simple record.
 
+## Drafting
+
+Under Cases, with a matter open: **Draft a document**. The catalogue lists every kind of document used in practice. Kinds with a standard template can be drafted now; the rest are marked *planned*. The research, format rules and statutory checks are in [`docs/drafting/catalogue.md`](docs/drafting/catalogue.md).
+
+- Fields fill in from the matter (client, case number, the firm's details). Staff fill in the rest, and checks flag what doesn't meet the standard as *must fix*, *should fix* or *note*, each with its source.
+- **Draft → review → final.** Staff with `drafting.use` draft and submit. An attorney (`drafting.approve`) finalises, which is blocked while a *must fix* remains and saves the document to the matter. Drafts download as Word or PDF at any stage.
+- Values are encrypted with the firm key; audit rows carry only the matter number and template. Templates are versioned in code and ship as *unreviewed* until an attorney reviews the standard wording.
+
 ## Practice reports
 
 Under Operations → Reports, for any period of up to a year, each with a CSV download (`GET /api/reports/practice/<report>[.csv]?from=YYYY-MM-DD&to=YYYY-MM-DD`):

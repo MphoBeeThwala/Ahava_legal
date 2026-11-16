@@ -34,6 +34,7 @@ import SupportAccessPanel from './components/SupportAccessPanel';
 import SupportSignIn from './auth/SupportSignIn';
 import type { Notice } from './components/DismissibleNotice';
 import IntakeForm from './components/IntakeForm';
+import DraftingPanel from './components/DraftingPanel';
 import AssessmentCard from './components/AssessmentCard';
 import CaseTable from './components/CaseTable';
 import CaseWorkspace from './components/CaseWorkspace';
@@ -765,25 +766,32 @@ function App() {
         ) : null}
 
         {view === 'cases' ? (
-          <section className="content-grid" data-section="cases">
-            <div className="primary-column">{recentMatters}</div>
-            <aside className="secondary-column">
-              {assessmentCard}
-              <CaseWorkspace
-                api={api}
-                selectedCaseId={selectedCaseId}
-                onSelectCase={handleSelectCase}
-                onChanged={loadWorkspace}
-                canEdit={can('matters.write')}
-                canEditCalendar={can('calendar.write')}
-                canResearch={hasPermission(currentUser.role, 'research.use')}
-                canApproveResearch={hasPermission(currentUser.role, 'research.approve')}
-                canManagePortal={hasPermission(currentUser.role, 'portal.manage')}
-                canWriteMatter={hasPermission(currentUser.role, 'matters.write')}
-                canShareDocuments={hasPermission(currentUser.role, 'documents.write')}
-              />
-            </aside>
-          </section>
+          <>
+            <section className="content-grid" data-section="cases">
+              <div className="primary-column">{recentMatters}</div>
+              <aside className="secondary-column">
+                {assessmentCard}
+                <CaseWorkspace
+                  api={api}
+                  selectedCaseId={selectedCaseId}
+                  onSelectCase={handleSelectCase}
+                  onChanged={loadWorkspace}
+                  canEdit={can('matters.write')}
+                  canEditCalendar={can('calendar.write')}
+                  canResearch={hasPermission(currentUser.role, 'research.use')}
+                  canApproveResearch={hasPermission(currentUser.role, 'research.approve')}
+                  canManagePortal={hasPermission(currentUser.role, 'portal.manage')}
+                  canWriteMatter={hasPermission(currentUser.role, 'matters.write')}
+                  canShareDocuments={hasPermission(currentUser.role, 'documents.write')}
+                />
+              </aside>
+            </section>
+            {can('drafting.use') ? (
+              <ErrorBoundary label="Drafting">
+                <DraftingPanel caseId={selectedCaseId} currentUser={currentUser} />
+              </ErrorBoundary>
+            ) : null}
+          </>
         ) : null}
 
         {view === 'time' ? (
