@@ -147,6 +147,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Contingency Fees Act 66 of 1997 ss 2, 3 (writing, prescribed form, signed by client)',
       'LPC rules under s 6 of that Act',
     ],
+    'template',
   ),
   k(
     'special-power-of-attorney',
@@ -214,6 +215,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Uniform Rule 6(1)',
       'Regulations under the Justices of the Peace and Commissioners of Oaths Act (GN R1258 of 1972)',
     ],
+    'template',
   ),
   k(
     'answering-affidavit',
@@ -238,6 +240,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Starts an action for an unliquidated claim, with the particulars of claim attached.',
     'High Court',
     ['Uniform Rules 17, 18; Form 10'],
+    'template',
   ),
   k(
     'simple-summons',
@@ -254,6 +257,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records that the defendant will defend the action.',
     'High Court',
     ['Uniform Rule 19'],
+    'template',
   ),
   k(
     'plea',
@@ -262,6 +266,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Admits, denies or confesses and avoids each allegation in the particulars of claim.',
     'High Court',
     ['Uniform Rules 18, 22'],
+    'template',
   ),
   k(
     'exception',
@@ -425,6 +430,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Confirms the contents of another deponent’s affidavit insofar as they relate to the confirming deponent.',
     'Any court',
     ['GN R1258 of 1972'],
+    'template',
   ),
   k(
     'certification-of-copies',
@@ -443,6 +449,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Refers a dispute to conciliation; dismissals within 30 days, unfair labour practices within 90 days.',
     'CCMA / bargaining council',
     ['Labour Relations Act 66 of 1995 s 191', 'CCMA Rules (referral, service, signature)'],
+    'template',
   ),
   k(
     'lra-7-13-arbitration',
@@ -580,6 +587,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Sells land; must be in writing and signed by the parties or their agents on written authority.',
     'Seller and purchaser',
     ['Alienation of Land Act 68 of 1981 s 2(1)'],
+    'template',
   ),
   k(
     'residential-lease',
@@ -588,6 +596,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records the terms of a residential lease, including the deposit, inspections and the standard provisions.',
     'Landlord and tenant',
     ['Rental Housing Act 50 of 1999 s 5', 'Consumer Protection Act 68 of 2008 s 14'],
+    'template',
   ),
   k(
     'commercial-lease',
@@ -610,6 +619,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Deeds Registries Act 47 of 1937 s 20',
       'Deeds Registries Regulations 44, 44A (preparation certificate)',
     ],
+    'template',
   ),
   k(
     'deed-of-transfer',
@@ -688,6 +698,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Prescription Act s 14 (acknowledgment interrupts prescription)',
       'National Credit Act where it applies',
     ],
+    'template',
   ),
   k(
     'suretyship',
@@ -696,6 +707,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'A surety binds themselves for another’s debt; must be in writing and signed by the surety.',
     'Creditor and surety',
     ['General Law Amendment Act 50 of 1956 s 6'],
+    'template',
   ),
   k(
     'nda',

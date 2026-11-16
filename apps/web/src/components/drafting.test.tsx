@@ -88,11 +88,11 @@ test('every kind of document can be explored; only kinds with a template can be 
   const picker = await screen.findByLabelText('Document');
   await screen.findByRole('option', { name: 'Letter of demand' });
   expect(within(picker).getByRole('option', { name: 'Letter of demand' })).not.toBeDisabled();
-  const plea = within(picker).getByRole('option', { name: /Plea \(template coming\)/ });
-  expect(plea).not.toBeDisabled();
-  fireEvent.change(picker, { target: { value: 'plea' } });
+  const exception = within(picker).getByRole('option', { name: /Exception \(template coming\)/ });
+  expect(exception).not.toBeDisabled();
+  fireEvent.change(picker, { target: { value: 'exception' } });
   expect(screen.getByText('Template coming')).toBeInTheDocument();
-  expect(screen.getByText(/Uniform Rules 18, 22/)).toBeInTheDocument();
+  expect(screen.getByText(/Uniform Rule 23/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Start draft' })).toBeDisabled();
   fireEvent.change(picker, { target: { value: 'letter-of-demand' } });
   expect(screen.getByText('Ready to draft')).toBeInTheDocument();

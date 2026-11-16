@@ -4,7 +4,14 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 import request from 'supertest';
 import app from '../server';
-import { addBusinessDays, addMonths, isBusinessDay, publicHolidays } from '../drafting/days';
+import {
+  addBusinessDays,
+  addCalendarDays,
+  addMonths,
+  isBusinessDay,
+  publicHolidays,
+} from '../drafting/days';
+import { defendDeadline } from '../drafting/templates/litigation';
 import { numberInWords, parseRand, randWithWords, validSaIdNumber } from '../drafting/fields';
 import { renderDocx, renderPdf, renderText } from '../drafting/model';
 import { TEMPLATES, findTemplate } from '../drafting/registry';
@@ -118,6 +125,134 @@ describe('every template', () => {
     );
     expect(text).toContain('R12 500.00 (twelve thousand five hundred rand)');
     expect(text).toContain('by no later than 30 November 2026');
+  });
+});
+
+describe('second batch of templates', () => {
+  const mustFields = (id: string, values: Record<string, string>) =>
+    findTemplate(id)!
+      .checks(values, CTX)
+      .filter((issue) => issue.severity === 'must')
+      .map((issue) => issue.field);
+  const text = (id: string, values: Record<string, string>) => {
+    const template = findTemplate(id)!;
+    return renderText(template.build(values, CTX), template.format);
+  };
+
+  test('counting: court days skip 16 December to 15 January; calendar days skip a holiday last day', () => {
+    expect(defendDeadline('2026-12-10', 10)).toBe('2027-01-26');
+    expect(addCalendarDays('2026-11-16', 30)).toBe('2026-12-17'); // 16 December is a holiday
+    const late = findTemplate('notice-of-intention-to-defend')!.checks(
+      { servedOn: '2026-10-01', defendDays: '10' },
+      CTX,
+    );
+    expect(late.find((issue) => issue.field === 'servedOn')?.message).toMatch(
+      /due by 15 October 2026/,
+    );
+  });
+
+  test('a plea must answer every paragraph, and "noted" is flagged', () => {
+    const issues = findTemplate('plea')!.checks(
+      { paragraphCount: '5', responses: '1: Admitted.\n2 to 3: Denied.\n4: Noted.' },
+      CTX,
+    );
+    expect(issues.find((issue) => issue.severity === 'must')?.message).toMatch(/Paragraph 5 /);
+    expect(issues.some((issue) => /Noted/.test(issue.message))).toBe(true);
+    expect(text('plea', { responses: '2 to 3: Denied.' })).toContain(
+      'Ad paragraphs 2 to 3: Denied.',
+    );
+  });
+
+  test('a combined summons follows Rules 18(6), 18(10) and 19(1)', () => {
+    expect(
+      mustFields('combined-summons', {
+        defendDays: '5',
+        contract: 'Written contract',
+        claimType: 'Damages',
+        amount: '100000',
+      }),
+    ).toEqual(['defendDays', 'contractDetails', 'annexures', 'damages']);
+    expect(
+      text('combined-summons', {
+        firstParty: 'Acme (Pty) Ltd',
+        secondParty: 'Sipho Dlamini',
+        amount: '12500',
+        claimType: 'Liquidated amount',
+      }),
+    ).toContain('Payment of the sum of R12 500.00 (twelve thousand five hundred rand)');
+  });
+
+  test('a late CCMA referral needs condonation, and the application is added', () => {
+    const values = {
+      disputeType: 'Unfair dismissal',
+      disputeDate: '2026-09-01',
+      referralDate: '2026-11-16',
+    };
+    expect(mustFields('lra-7-11-referral', values)).toContain('lateReasons');
+    expect(text('lra-7-11-referral', values)).toContain('APPLICATION FOR CONDONATION');
+    expect(text('lra-7-11-referral', { ...values, disputeDate: '2026-11-01' })).not.toContain(
+      'CONDONATION OF',
+    );
+  });
+
+  test('property: spouse consent, bond dates, cooling-off and long consumer leases', () => {
+    expect(
+      mustFields('deed-of-sale', {
+        sellerMarital: 'Married in community of property',
+        bond: 'Yes',
+      }),
+    ).toEqual(expect.arrayContaining(['sellerSpouse', 'bondDate', 'bondAmount']));
+    expect(text('deed-of-sale', { price: '200000', purchaserMarital: 'Unmarried' })).toContain(
+      'section 29A of the Alienation of Land Act',
+    );
+    expect(text('deed-of-sale', { price: '900000', purchaserMarital: 'Unmarried' })).not.toContain(
+      'section 29A',
+    );
+    const lease = findTemplate('residential-lease')!.checks(
+      { startDate: '2026-12-01', endDate: '2029-11-30', cpa: 'Yes' },
+      CTX,
+    );
+    expect(lease.find((issue) => issue.field === 'endDate')?.severity).toBe('should');
+    expect(
+      mustFields('poa-to-pass-transfer', { saleDate: '2026-11-10', signDate: '2026-11-01' }),
+    ).toEqual(expect.arrayContaining(['titleDeed', 'signDate']));
+  });
+
+  test('suretyship, acknowledgment of debt and contingency fee caps', () => {
+    expect(
+      mustFields('suretyship', {
+        suretyMarital: 'Married in community of property',
+        scope: 'A specific debt',
+      }),
+    ).toEqual(expect.arrayContaining(['specificDebt', 'suretySpouse']));
+    expect(
+      text('acknowledgment-of-debt', {
+        amount: '10000',
+        instalment: '3000',
+        repayment: 'Monthly instalments',
+        firstPayment: '2026-12-01',
+      }),
+    ).toContain('about 4 instalments');
+    expect(
+      mustFields('contingency-fees-agreement', {
+        upliftPercent: '150',
+        money: 'Yes',
+        capPercent: '30',
+      }),
+    ).toEqual(expect.arrayContaining(['upliftPercent', 'capPercent']));
+  });
+
+  test('every template in the registry is marked ready in the catalogue, and the reverse', async () => {
+    const { DRAFTING_CATALOGUE } = await import('@ahava88/shared');
+    const ready = DRAFTING_CATALOGUE.filter((kind) => kind.availability === 'template').map(
+      (kind) => kind.id,
+    );
+    expect(ready.sort()).toEqual(TEMPLATES.map((template) => template.id).sort());
+    for (const template of TEMPLATES) {
+      expect(DRAFTING_CATALOGUE.find((kind) => kind.id === template.id)?.category).toBe(
+        template.category,
+      );
+    }
   });
 });
 
