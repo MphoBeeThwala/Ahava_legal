@@ -412,6 +412,43 @@ export const researchRequests = pgTable(
   ],
 );
 
+// ------------------------------------------------------------ drafting
+//
+// Drafts made from the standard templates (roadmap 15a). The template itself
+// lives in the code (versioned); the draft keeps the template version it was
+// made from, its values (encrypted: they name clients and parties), and its
+// review: draft -> review -> final (an attorney finalises, which saves the
+// document to the matter).
+
+export const documentDrafts = pgTable(
+  'document_drafts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    firmId: firmId(),
+    caseId: uuid('case_id')
+      .notNull()
+      .references(() => cases.id, { onDelete: 'cascade' }),
+    templateId: text('template_id').notNull(),
+    templateVersion: text('template_version').notNull(),
+    /** 'draft' | 'review' | 'final' */
+    status: text('status').notNull().default('draft'),
+    /** Encrypted field values. */
+    valuesEncrypted: text('values_encrypted').notNull(),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }),
+    finalisedBy: uuid('finalised_by').references(() => users.id, { onDelete: 'set null' }),
+    finalisedAt: timestamp('finalised_at', { withTimezone: true }),
+    /** The matter document saved when the draft was finalised. */
+    documentId: uuid('document_id').references(() => documents.id, { onDelete: 'set null' }),
+    ...updatable,
+  },
+  (t) => [
+    index('document_drafts_case_idx').on(t.caseId, t.createdAt),
+    tenantPolicy('document_drafts'),
+    matterPolicy('document_drafts'),
+  ],
+);
+
 // ------------------------------------------------------------ legal corpus
 //
 // The approved corpus (roadmap §7.4). Public sources are platform tables:
