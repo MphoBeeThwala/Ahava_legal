@@ -82,14 +82,20 @@ function mockGet(drafts: Draft[]) {
     );
 }
 
-test('lists every kind of document; only kinds with a template can be started', async () => {
+test('every kind of document can be explored; only kinds with a template can be started', async () => {
   mockGet([]);
   render(<DraftingPanel caseId="c1" currentUser={user('paralegal')} />);
   const picker = await screen.findByLabelText('Document');
   await screen.findByRole('option', { name: 'Letter of demand' });
   expect(within(picker).getByRole('option', { name: 'Letter of demand' })).not.toBeDisabled();
-  expect(within(picker).getByRole('option', { name: /Plea \(planned\)/ })).toBeDisabled();
+  const plea = within(picker).getByRole('option', { name: /Plea \(template coming\)/ });
+  expect(plea).not.toBeDisabled();
+  fireEvent.change(picker, { target: { value: 'plea' } });
+  expect(screen.getByText('Template coming')).toBeInTheDocument();
+  expect(screen.getByText(/Uniform Rules 18, 22/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Start draft' })).toBeDisabled();
   fireEvent.change(picker, { target: { value: 'letter-of-demand' } });
+  expect(screen.getByText('Ready to draft')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Start draft' })).toBeEnabled();
 });
 
