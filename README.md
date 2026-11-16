@@ -91,7 +91,7 @@ When the firms table is empty, the server creates a `default` firm from these va
 | `FIRM_NAME` | `Nkosi & Partners Inc.` | Header, page title |
 | `FIRM_SHORT_NAME` | `Nkosi` | Brand mark initial |
 | `FIRM_LOGO_URL` | `https://…/logo.png` | Logo in place of the initial |
-| `FIRM_PRIMARY_COLOR` / `FIRM_ACCENT_COLOR` | `#1b7a58` / `#0f5d43` | Theme colours (6-digit hex only) |
+| `FIRM_PRIMARY_COLOR` / `FIRM_ACCENT_COLOR` | `#146b4f` / `#0b3f2f` | Theme colours (6-digit hex only) |
 | `FIRM_CASE_PREFIX` | `NKP` | Case numbers, e.g. `NKP-2026-0001` (2–8 letters/digits) |
 | `PRODUCT_NAME` | `Legal Practice Workspace` | Product name in the page title |
 | `PLATFORM_SUPPORT_EMAIL` | `support@…` | Platform support contact |

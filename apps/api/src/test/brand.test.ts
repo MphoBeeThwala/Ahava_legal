@@ -58,7 +58,7 @@ test('invalid colours and prefixes fall back to safe defaults', () => {
     { FIRM_PRIMARY_COLOR: 'red; background:url(x)', FIRM_CASE_PREFIX: 'BAD PREFIX!' },
     ({ envFirmDefaults }) => {
       const brand = envFirmDefaults();
-      assert.equal(brand.primaryColor, '#1b7a58');
+      assert.equal(brand.primaryColor, '#146b4f');
       assert.equal(brand.casePrefix, 'MAT');
     },
   );
@@ -94,7 +94,7 @@ test('a firm row drives its public branding, with safe fallbacks', () => {
   assert.equal(brand.firmName, 'Nkosi & Partners Inc.');
   assert.equal(brand.firmShortName, 'Nkosi');
   assert.equal(brand.primaryColor, '#123456');
-  assert.equal(brand.accentColor, '#0f5d43');
+  assert.equal(brand.accentColor, '#0b3f2f');
   assert.equal(brand.casePrefix, 'NKP');
   assert.equal(brand.productName, 'Legal Practice Workspace');
   assert.equal(brand.platform.legalName, 'Ahava on 88 (Pty) Ltd');

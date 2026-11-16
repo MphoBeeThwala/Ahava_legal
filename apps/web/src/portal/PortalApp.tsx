@@ -9,6 +9,7 @@ import type {
 } from '@ahava88/shared';
 import { api, apiErrorMessage } from '../api';
 import '../App.css';
+import '../theme.css';
 
 const money = (cents: number) =>
   `R ${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
