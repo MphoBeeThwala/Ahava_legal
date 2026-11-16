@@ -13,7 +13,7 @@ import {
   type DraftTemplate,
 } from '../template';
 
-function courtHeading(
+export function courtHeading(
   values: Record<string, string>,
   ctx: DraftContext,
   roles: [string, string],
@@ -31,7 +31,7 @@ function courtHeading(
   };
 }
 
-const courtFields = [
+export const courtFields = [
   {
     key: 'court',
     label: 'Court',

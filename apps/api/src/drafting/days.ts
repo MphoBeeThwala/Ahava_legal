@@ -123,3 +123,41 @@ export function longDate(value: string | undefined): string {
   if (!date) return value ?? '';
   return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
+
+/** 16 December to 15 January, which is not counted for a notice of intention to defend (Uniform Rule 19(1)). */
+export function inDiesNon(value: string): boolean {
+  const monthDay = value.slice(5);
+  return monthDay >= '12-16' || monthDay <= '01-15';
+}
+
+/** Court days after a date, optionally leaving out 16 December to 15 January. */
+export function addCourtDays(
+  from: string,
+  days: number,
+  options: { skipDiesNon?: boolean } = {},
+): string | null {
+  let date = parseDate(from);
+  if (!date) return null;
+  let left = days;
+  while (left > 0) {
+    date = addDays(date, 1);
+    const day = iso(date);
+    if (isBusinessDay(day) && !(options.skipDiesNon && inDiesNon(day))) left -= 1;
+  }
+  return iso(date);
+}
+
+/**
+ * The last day of a period of calendar days (Interpretation Act 33 of 1957 s 4):
+ * leave out the first day, count the last, and move past a last day that is
+ * a Sunday or public holiday.
+ */
+export function addCalendarDays(from: string, days: number): string | null {
+  const start = parseDate(from);
+  if (!start) return null;
+  let date = addDays(start, days);
+  while (date.getUTCDay() === 0 || publicHolidays(date.getUTCFullYear()).has(iso(date))) {
+    date = addDays(date, 1);
+  }
+  return iso(date);
+}
