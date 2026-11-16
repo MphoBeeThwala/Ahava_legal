@@ -10,7 +10,11 @@ import { renderDocx, renderPdf, renderText } from '../drafting/model';
 import { TEMPLATES, findTemplate } from '../drafting/registry';
 import { setAiClient } from '../lib/ai-client';
 import { createFirm } from '../services/firm.service';
-import { createStaff, type TestStaff } from './helpers';
+import { withTenant } from '../db/tenant';
+import { rotateDataKey } from '../services/keys.service';
+import { pendingReencryption, reencryptFirm } from '../services/reencrypt.service';
+import { exportFirm } from '../services/firm-export.service';
+import { createStaff, defaultFirm, type TestStaff } from './helpers';
 
 const CTX = {
   today: '2026-11-16',
@@ -263,6 +267,22 @@ describe('drafts on a matter', () => {
       .get(`/api/cases/${caseId}/drafts/${draftId}/file?format=pdf`)
       .set(secretary.auth);
     expect(pdf.headers['content-type']).toBe('application/pdf');
+  });
+
+  test('drafts follow key rotation and are in the firm export', async () => {
+    const firm = await defaultFirm();
+    await withTenant(firm, () => rotateDataKey(), { system: true });
+    const before = await withTenant(firm, () => pendingReencryption(), { system: true });
+    expect(before.pending.documents).toBeGreaterThan(0);
+    await reencryptFirm(firm);
+    const after = await withTenant(firm, () => pendingReencryption(), { system: true });
+    expect(after.pending.documents).toBe(0);
+    const reread = await request(app)
+      .get(`/api/cases/${caseId}/drafts/${draftId}`)
+      .set(secretary.auth);
+    expect(reread.body.values.debtorName).toBe('Sipho Dlamini');
+    const data = await exportFirm(firm);
+    expect(JSON.stringify(data.tables.documentDrafts)).toContain('Sipho Dlamini');
   });
 
   test('another firm cannot see or change the drafts', async () => {
