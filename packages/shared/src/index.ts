@@ -32,8 +32,8 @@ export const DEFAULT_FIRM_BRAND: FirmBrand = Object.freeze({
   firmShortName: 'Your Firm',
   productName: 'Legal Practice Workspace',
   logoUrl: null,
-  primaryColor: '#1b7a58',
-  accentColor: '#0f5d43',
+  primaryColor: '#146b4f',
+  accentColor: '#0b3f2f',
   casePrefix: 'MAT',
 });
 

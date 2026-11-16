@@ -49,6 +49,7 @@ import HelpPanel from './components/HelpPanel';
 import PrecedentsPanel from './components/PrecedentsPanel';
 import TrustPanel from './components/TrustPanel';
 import './App.css';
+import './theme.css';
 
 const sampleMatter: Omit<IntakeSubmissionInput, 'consentToAi' | 'consentToStorage'> = {
   fullName: 'Thandi Nkosi',
@@ -77,16 +78,72 @@ type SectionId =
   | 'account'
   | 'help';
 
-const NAV_SECTIONS: Array<{ id: SectionId; label: string; permission?: Permission }> = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'intake', label: 'Intake' },
-  { id: 'clients', label: 'Clients', permission: 'clients.read' },
-  { id: 'cases', label: 'Cases' },
-  { id: 'time', label: 'Time', permission: 'time.read' },
-  { id: 'trust', label: 'Trust', permission: 'trust.read' },
-  { id: 'operations', label: 'Operations' },
-  { id: 'account', label: 'Account & team' },
-  { id: 'help', label: 'Help', permission: 'helpdesk.use' },
+const NAV_SECTIONS: Array<{
+  id: SectionId;
+  label: string;
+  /** The banner's title and subtitle while this section is in view. */
+  title: string;
+  subtitle: string;
+  permission?: Permission;
+}> = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    title: 'Practice overview',
+    subtitle: 'Open intakes, live matters and what needs attention today.',
+  },
+  {
+    id: 'intake',
+    label: 'Intake',
+    title: 'Client intake',
+    subtitle: 'Take a new matter, redact personal information, then assess it.',
+  },
+  {
+    id: 'clients',
+    label: 'Clients',
+    title: 'Clients',
+    subtitle: 'The client register, conflict checks and FICA status.',
+    permission: 'clients.read',
+  },
+  {
+    id: 'cases',
+    label: 'Cases',
+    title: 'Matters',
+    subtitle: 'Recent matters, their urgency and the next action on each.',
+  },
+  {
+    id: 'time',
+    label: 'Time',
+    title: 'Time and fees',
+    subtitle: 'Record time in 6-minute units and track work in progress.',
+    permission: 'time.read',
+  },
+  {
+    id: 'trust',
+    label: 'Trust',
+    title: 'Trust accounting',
+    subtitle: 'Trust ledgers, deposits and authorised payments.',
+    permission: 'trust.read',
+  },
+  {
+    id: 'operations',
+    label: 'Operations',
+    title: 'Practice operations',
+    subtitle: 'Documents, billing, calendar, notifications, reports and compliance.',
+  },
+  {
+    id: 'account',
+    label: 'Account & team',
+    title: 'Account and team',
+    subtitle: 'Your sign-in, firm settings, staff, records and research sources.',
+  },
+  {
+    id: 'help',
+    label: 'Help',
+    title: 'Help and support',
+    subtitle: 'Guides, and requests to the platform support team.',
+    permission: 'helpdesk.use',
+  },
 ];
 
 /** Links from emails: /invite/<token> and /reset-password/<token>. */
@@ -184,11 +241,15 @@ function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
 
   const sectionRefs = useRef<Partial<Record<SectionId, HTMLElement | null>>>({});
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const clickedAt = useRef({ at: 0 });
+  const [headerCondensed, setHeaderCondensed] = useState(false);
   const workspaceReady = useMemo(() => Boolean(currentUser), [currentUser]);
 
   const scrollToSection = useCallback((sectionId: SectionId) => {
     const node = sectionRefs.current[sectionId];
     if (node) {
+      clickedAt.current = { at: Date.now() };
       node.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setActiveSection(sectionId);
     }
@@ -301,27 +362,44 @@ function App() {
       return undefined;
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const section = (visible[0]?.target as HTMLElement | undefined)?.dataset?.section;
-        if (section) {
-          setActiveSection(section as SectionId);
-        }
-      },
-      { rootMargin: '-20% 0px -55% 0px', threshold: [0.15, 0.4, 0.7] },
-    );
-
-    NAV_SECTIONS.forEach(({ id }) => {
-      const node = sectionRefs.current[id];
-      if (node) {
-        observer.observe(node);
+    // The active section is the one whose top most recently passed under the
+    // pinned header. Right after a nav click, the clicked section wins (a
+    // section near the bottom of the page may never reach the top).
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      setHeaderCondensed(window.scrollY > 40);
+      if (Date.now() - clickedAt.current.at < 1200) {
+        return;
       }
-    });
-
-    return () => observer.disconnect();
+      const offset = (headerRef.current?.offsetHeight ?? 0) + 32;
+      // Two columns: the section whose top is nearest the header (and past it).
+      let current: SectionId = 'overview';
+      let nearest = -Infinity;
+      for (const { id } of NAV_SECTIONS) {
+        const top = sectionRefs.current[id]?.getBoundingClientRect().top;
+        if (top !== undefined && top <= offset && top > nearest) {
+          nearest = top;
+          current = id;
+        }
+      }
+      setActiveSection(current);
+    };
+    const onScroll = () => {
+      if (!frame) {
+        frame = window.requestAnimationFrame(update);
+      }
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
   }, [workspaceReady]);
 
   const handleLogout = async () => {
@@ -462,56 +540,64 @@ function App() {
     );
   }
 
-  const activeLabel =
-    NAV_SECTIONS.find((section) => section.id === activeSection)?.label || 'Overview';
+  const activeNav =
+    NAV_SECTIONS.find((section) => section.id === activeSection) ?? NAV_SECTIONS[0]!;
+  const activeLabel = activeNav.label;
 
   return (
     <div className="app-shell">
-      <header className="hero hero-compact">
-        <div className="hero-copy">
-          <BrandMark branding={branding} />
-          <div>
-            <p className="eyebrow">{branding.firmName}</p>
-            <h1>Practice workspace</h1>
-            <p className="hero-text">
-              Encrypted intake, matter triage, and day-to-day case operations.
-            </p>
+      <div
+        className={`workspace-header ${headerCondensed ? 'workspace-header-condensed' : ''}`}
+        ref={headerRef}
+      >
+        <header className="hero hero-compact">
+          <div className="hero-copy">
+            <BrandMark branding={branding} />
+            <div>
+              <p className="eyebrow">{branding.firmName}</p>
+              <h1 aria-live="polite">{activeNav.title}</h1>
+              <p className="hero-text">{activeNav.subtitle}</p>
+            </div>
           </div>
-        </div>
-        <div className="user-strip">
-          <div className="user-chip" title={currentUser.email}>
-            <span className="user-name">{currentUser.fullName || currentUser.email}</span>
-            <span className="user-role">{ROLE_LABELS[currentUser.role] ?? currentUser.role}</span>
+          <div className="user-strip">
+            <div className="user-chip" title={currentUser.email}>
+              <span className="user-name">{currentUser.fullName || currentUser.email}</span>
+              <span className="user-role">{ROLE_LABELS[currentUser.role] ?? currentUser.role}</span>
+            </div>
+            <button
+              type="button"
+              className="secondary-button sign-out-button"
+              onClick={handleLogout}
+            >
+              Sign out
+            </button>
           </div>
-          <button type="button" className="secondary-button sign-out-button" onClick={handleLogout}>
-            Sign out
-          </button>
-        </div>
-      </header>
+        </header>
 
-      <nav className="workspace-nav" aria-label="Workspace sections">
-        <div className="workspace-nav-inner">
-          <div className="nav-links">
-            {NAV_SECTIONS.filter(
-              ({ permission }) => !permission || currentUser.permissions.includes(permission),
-            ).map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={`nav-link ${activeSection === id ? 'nav-link-active' : ''}`}
-                onClick={() => scrollToSection(id)}
-                aria-current={activeSection === id ? 'page' : undefined}
-              >
-                {label}
-              </button>
-            ))}
+        <nav className="workspace-nav" aria-label="Workspace sections">
+          <div className="workspace-nav-inner">
+            <div className="nav-links">
+              {NAV_SECTIONS.filter(
+                ({ permission }) => !permission || currentUser.permissions.includes(permission),
+              ).map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`nav-link ${activeSection === id ? 'nav-link-active' : ''}`}
+                  onClick={() => scrollToSection(id)}
+                  aria-current={activeSection === id ? 'page' : undefined}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="breadcrumb" aria-label="Current section">
+              <span className="breadcrumb-label">You are in</span>
+              <strong>{activeLabel}</strong>
+            </div>
           </div>
-          <div className="breadcrumb" aria-label="Current section">
-            <span className="breadcrumb-label">You are in</span>
-            <strong>{activeLabel}</strong>
-          </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       {sessionInfo?.method === 'support' ? (
         <div className="notice notice-warn support-banner" role="status">

@@ -14,6 +14,7 @@ import type {
 import { api, apiErrorMessage, apiStatus } from '../api';
 import { HelpText } from '../components/HelpPanel';
 import '../App.css';
+import '../theme.css';
 
 interface Plan {
   code: string;

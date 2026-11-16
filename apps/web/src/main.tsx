@@ -46,7 +46,7 @@ function showUpdateBanner(onConfirm: () => void): void {
   refresh.textContent = 'Refresh';
   refresh.style.cssText =
     'border:none;border-radius:12px;padding:8px 14px;font-weight:700;cursor:pointer;' +
-    'background:linear-gradient(135deg,#1b7a58,#0f5d43);color:#f8fff9;';
+    'background:linear-gradient(135deg,#146b4f,#0b3f2f);color:#f8fff9;';
   refresh.addEventListener('click', onConfirm);
   banner.appendChild(refresh);
 

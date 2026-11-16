@@ -1,0 +1,698 @@
+/*
+ * Dark theme. Loaded after App.css (App, portal and console), so these rules
+ * win. The firm's own colours still come from the API (--brand-green and
+ * --brand-accent, set by applyBranding); --brand-ink is a lighter mix of the
+ * firm colour for text and outlines that must stay readable on dark surfaces.
+ */
+:root {
+  color-scheme: dark;
+
+  --bg: #090f0d;
+  --bg-raised: #0f1714;
+  --surface: #121c18;
+  --surface-2: #17231e;
+  --surface-3: #1d2b25;
+  --input-bg: #0c1411;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.13);
+
+  --text-primary: #e7eeea;
+  --text-secondary: #aebcb5;
+  --text-muted: #8a9b93;
+  --muted: #8a9b93;
+
+  --brand-dark: #050a08;
+  --brand-ink: color-mix(in srgb, var(--brand-green) 45%, #dff5ea);
+  --brand-soft: color-mix(in srgb, var(--brand-green) 18%, transparent);
+  --brand-softer: color-mix(in srgb, var(--brand-green) 10%, transparent);
+  --focus-ring: color-mix(in srgb, var(--brand-green) 55%, transparent);
+
+  --info-bg: rgba(88, 144, 255, 0.12);
+  --info-fg: #a9c6ff;
+  --ok-bg: rgba(46, 184, 124, 0.13);
+  --ok-fg: #8fe0bd;
+  --warn-bg: rgba(240, 180, 60, 0.13);
+  --warn-fg: #f2cd7d;
+  --err-bg: rgba(240, 90, 110, 0.13);
+  --err-fg: #f5a3ae;
+
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand-green) 45%, transparent);
+}
+
+/* ---------------------------------------------------------------- shell */
+
+.app-shell {
+  color: var(--text-primary);
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      color-mix(in srgb, var(--brand-green) 16%, transparent),
+      transparent 32%
+    ),
+    radial-gradient(circle at 100% 0%, rgba(120, 140, 255, 0.05), transparent 28%), var(--bg);
+}
+
+.hero {
+  color: var(--text-primary);
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--brand-accent) 55%, #050a08),
+    color-mix(in srgb, var(--brand-green) 28%, #0b1411)
+  );
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
+.brand-mark {
+  color: #f2fbf6;
+  background: linear-gradient(135deg, var(--brand-green), var(--brand-accent));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.eyebrow {
+  color: var(--brand-ink);
+}
+
+.hero-text,
+.user-role {
+  color: var(--text-secondary);
+}
+
+.user-name {
+  color: var(--text-primary);
+}
+
+.pill,
+.user-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+}
+
+.sign-out-button {
+  color: var(--text-primary) !important;
+  border-color: var(--line-strong) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.workspace-nav {
+  background: linear-gradient(180deg, var(--bg) 70%, transparent);
+}
+
+.workspace-nav-inner {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.nav-link,
+.tab-button {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.nav-link:hover,
+.tab-button:hover {
+  background: var(--brand-softer);
+  color: var(--text-primary);
+}
+
+.nav-link-active,
+.tab-active {
+  color: #f4fbf7;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--brand-green), var(--brand-accent));
+}
+
+.breadcrumb {
+  color: var(--text-muted);
+}
+
+.breadcrumb strong {
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------- surfaces */
+
+.panel,
+.portal-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.panel h2,
+.panel h3,
+.panel h4 {
+  color: var(--text-primary);
+}
+
+.panel-kicker {
+  color: var(--brand-ink);
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.stat-mint {
+  background: linear-gradient(180deg, rgba(46, 184, 124, 0.12), var(--surface) 70%);
+}
+
+.stat-blue {
+  background: linear-gradient(180deg, rgba(88, 144, 255, 0.12), var(--surface) 70%);
+}
+
+.stat-gold {
+  background: linear-gradient(180deg, rgba(240, 180, 60, 0.12), var(--surface) 70%);
+}
+
+.stat-rose {
+  background: linear-gradient(180deg, rgba(240, 90, 110, 0.12), var(--surface) 70%);
+}
+
+.stat-label {
+  color: var(--text-secondary);
+}
+
+.stat-detail,
+.muted,
+.field-hint {
+  color: var(--text-muted);
+}
+
+.case-hero,
+.mini-item,
+.mini-stat,
+.nested-panel,
+.empty-state,
+.popia-callout,
+.consent-stack {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+}
+
+.consent-row,
+.assessment-summary,
+.assessment-section ul,
+.compliance-list {
+  color: var(--text-secondary);
+}
+
+.assessment-footer,
+.matter-access {
+  border-top-color: var(--line);
+}
+
+.case-table th,
+.case-table td,
+.time-table th,
+.time-table td,
+.data-table th,
+.data-table td,
+.domain-item,
+.subscription-payments th,
+.subscription-payments td {
+  border-color: var(--line);
+}
+
+.case-table th,
+.time-table th,
+.data-table th {
+  color: var(--text-muted);
+}
+
+.case-table td,
+.time-table td,
+.data-table td {
+  color: var(--text-primary);
+}
+
+.case-table tbody tr:hover td {
+  background: var(--brand-softer);
+}
+
+.skeleton-hero,
+.skeleton-stat,
+.skeleton-panel,
+.skeleton-block,
+.skeleton-line {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-3) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+}
+
+.brand-logo,
+.mfa-qr {
+  background: #ffffff;
+}
+
+.mfa-secret,
+.link-url,
+.recovery-codes,
+.tag-list li,
+.fica-badge,
+.ticket-operator {
+  background: var(--brand-softer);
+  color: var(--text-primary);
+}
+
+.portal-message,
+.ticket-message {
+  background: var(--surface-2);
+}
+
+.portal-message-client {
+  background: var(--info-bg);
+}
+
+.research-brief,
+.plan-option,
+.fica-factors {
+  border-color: var(--line-strong);
+}
+
+.divider::before,
+.divider::after {
+  border-top-color: var(--line-strong);
+}
+
+.agenda-item {
+  border-left-color: var(--line-strong);
+}
+
+.time-table tr.urgent td,
+.roll-removed {
+  background: var(--warn-bg);
+}
+
+.onboarding {
+  border: 1px solid color-mix(in srgb, var(--brand-green) 55%, transparent);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.primary-button {
+  color: #f4fbf7;
+  background: linear-gradient(135deg, var(--brand-green), var(--brand-accent));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.primary-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.secondary-button {
+  color: var(--brand-ink);
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--brand-softer);
+  border-color: color-mix(in srgb, var(--brand-green) 45%, transparent);
+}
+
+.link-button,
+.app-shell a {
+  color: var(--brand-ink);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- notices and chips */
+
+.inline-info,
+.notice-info,
+.status-pill {
+  background: var(--info-bg);
+  color: var(--info-fg);
+  border-color: rgba(88, 144, 255, 0.22);
+}
+
+.inline-success,
+.notice-success,
+.status-active,
+.status-complimentary,
+.fica-verified,
+.chip-low {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+  border-color: rgba(46, 184, 124, 0.22);
+}
+
+.inline-warn,
+.notice-warn,
+.status-past_due,
+.status-cancelled,
+.chip-high {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  border-color: rgba(240, 180, 60, 0.22);
+}
+
+.inline-error,
+.notice-error,
+.status-suspended,
+.fica-review_due,
+.fica-not_started,
+.chip-critical {
+  background: var(--err-bg);
+  color: var(--err-fg);
+  border-color: rgba(240, 90, 110, 0.22);
+}
+
+.chip-medium,
+.chip-neutral {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.conflict-strong {
+  color: var(--err-fg);
+}
+
+.notice {
+  box-shadow: var(--shadow);
+}
+
+/* ---------------------------------------------------------------- form controls
+ * One look for every input, select and textarea, including forms that don't
+ * use the Field component.
+ */
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='color']):not(
+    [type='range']
+  ),
+select,
+textarea {
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 42px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #66766f;
+}
+
+input:not([type='checkbox']):not([type='radio']):hover:not(:disabled):not(:focus),
+select:hover:not(:disabled):not(:focus),
+textarea:hover:not(:disabled):not(:focus) {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+input:not([type='checkbox']):not([type='radio']):focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--brand-ink);
+  background: color-mix(in srgb, var(--input-bg) 85%, var(--brand-green));
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled,
+input[readonly],
+textarea[readonly] {
+  opacity: 0.65;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 7.5rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+select {
+  appearance: none;
+  padding-right: 36px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 13px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+select option {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--brand-green);
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'] {
+  color-scheme: dark;
+}
+
+/* Field component: label above control, full width. */
+.field input,
+.field textarea,
+.field select,
+.settings-field input,
+.settings-field textarea,
+.settings-field select,
+.stack-form input:not([type='checkbox']):not([type='radio']),
+.stack-form textarea,
+.stack-form select {
+  width: 100%;
+}
+
+.field-label,
+.settings-field > span,
+.settings-field > label {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* A label that wraps its control (<label>Text <textarea/></label>) stacks it. */
+label:has(> textarea),
+label:has(> select),
+label:has(> input:not([type='checkbox']):not([type='radio'])) {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- onboarding steps */
+
+.onboarding-steps {
+  list-style: none;
+  counter-reset: step;
+  padding-left: 0;
+  gap: 0.5rem;
+}
+
+.onboarding-steps li {
+  counter-increment: step;
+}
+
+.onboarding-steps li button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.onboarding-steps li button::before {
+  content: counter(step);
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+
+.onboarding-steps li.current button {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--brand-green) 60%, transparent);
+  background: var(--brand-softer);
+}
+
+.onboarding-steps li.current button::before {
+  background: var(--brand-green);
+  color: #f4fbf7;
+}
+
+.onboarding-steps li.done button::before {
+  content: '✓';
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+
+/* App.css styles these more specifically; keep them on the dark look. */
+.field input,
+.field textarea,
+.field select,
+.inline-form input,
+.inline-form select,
+.panel > .stack-form input,
+.panel > .stack-form textarea,
+.panel > .stack-form select {
+  color: var(--text-primary);
+  background-color: var(--input-bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.inline-form input:focus,
+.inline-form select:focus {
+  border-color: var(--brand-ink);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+/* ---------------------------------------------------------------- pinned header
+ * The banner and section nav stay at the top; once the page scrolls, the
+ * banner condenses but keeps the current section's title and subtitle.
+ */
+
+.workspace-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin: -24px -32px 20px;
+  padding: 16px 32px 10px;
+  background: linear-gradient(180deg, var(--bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.workspace-header .workspace-nav {
+  position: static;
+  margin: 12px 0 0;
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+}
+
+.workspace-header .hero {
+  margin-bottom: 0;
+  transition:
+    padding 160ms ease,
+    border-radius 160ms ease;
+}
+
+.workspace-header .hero h1 {
+  transition: font-size 160ms ease;
+}
+
+.workspace-header-condensed .hero {
+  padding: 12px 18px;
+  border-radius: 18px;
+  align-items: center;
+}
+
+.workspace-header-condensed .hero h1 {
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.workspace-header-condensed .hero-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.workspace-header-condensed .eyebrow {
+  display: none;
+}
+
+.workspace-header-condensed .brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+}
+
+.workspace-header-condensed .hero-copy {
+  align-items: center;
+}
+
+.workspace-header-condensed .user-strip {
+  flex-direction: row;
+  align-items: center;
+}
+
+.workspace-header-condensed .user-chip {
+  padding: 6px 12px;
+}
+
+.workspace-header-condensed .user-role {
+  display: none;
+}
+
+.dashboard-section {
+  scroll-margin-top: 190px;
+}
+
+@media (max-width: 760px) {
+  .workspace-header {
+    margin: -14px -14px 16px;
+    padding: 10px 14px 8px;
+  }
+
+  .workspace-header-condensed .hero-text {
+    display: none;
+  }
+}
