@@ -970,3 +970,11 @@ fieldset.consent-stack legend {
   color: #1b1b1b;
   box-shadow: var(--shadow);
 }
+
+/* The banner condenses as the page scrolls; scroll anchoring would then move
+   the scroll position and expand it again (flicker). */
+html,
+body,
+.app-shell {
+  overflow-anchor: none;
+}
