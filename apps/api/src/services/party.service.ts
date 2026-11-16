@@ -2,7 +2,7 @@
 // related persons. Details are encrypted (firm data key); party_index holds
 // blind-index hashes so the register can be searched without decrypting it.
 // Only the parties actually returned to a caller are decrypted.
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, notExists, or } from 'drizzle-orm';
 import type {
   MatterParty,
   MatterPartyRole,
@@ -13,7 +13,7 @@ import type {
 } from '@ahava88/shared';
 import { db } from '../db/client';
 import { nextValue } from '../db/sequences';
-import { caseParties, cases, parties, partyIndex, type PartyRow } from '../db/schema';
+import { caseParties, cases, parties, partyIndex, submissions, type PartyRow } from '../db/schema';
 import { httpError } from '../lib/http';
 import type { Actor } from '../lib/actor';
 import { iso, isoOrNull } from '../lib/time';
@@ -36,6 +36,7 @@ export async function toSummary(row: PartyRow, details?: PartyDetails): Promise<
     name: decrypted.name,
     isClient: row.isClient,
     clientSince: isoOrNull(row.clientSince),
+    prospective: !row.isClient && row.prospectiveSince !== null,
   };
 }
 
@@ -57,6 +58,8 @@ async function reindex(partyId: string, details: PartyDetails): Promise<void> {
 export interface CreatePartyOptions {
   isClient?: boolean;
   conflictCheckId?: string;
+  /** A prospective client from intake (ignored for clients). */
+  prospective?: boolean;
 }
 
 export async function createParty(
@@ -72,6 +75,7 @@ export async function createParty(
       kind,
       isClient: Boolean(options.isClient),
       clientSince: options.isClient ? new Date() : null,
+      prospectiveSince: options.prospective && !options.isClient ? new Date() : null,
       detailsEncrypted: await encryptJson(details),
       conflictCheckId: options.conflictCheckId ?? null,
     })
@@ -84,9 +88,13 @@ export async function createParty(
     {
       entityType: 'party',
       entityId: saved.id,
-      action: options.isClient ? 'client_created' : 'party_created',
+      action: options.isClient
+        ? 'client_created'
+        : saved.prospectiveSince
+          ? 'prospective_client_created'
+          : 'party_created',
       // Party numbers only: names are personal information.
-      summary: `${options.isClient ? 'Client' : 'Party'} ${saved.partyNumber} created`,
+      summary: `${options.isClient ? 'Client' : saved.prospectiveSince ? 'Prospective client' : 'Party'} ${saved.partyNumber} created`,
       details: { kind, conflictCheckId: options.conflictCheckId ?? null },
     },
     actor,
@@ -162,10 +170,13 @@ export async function updateParty(id: string, input: unknown, actor: Actor): Pro
  */
 export async function searchParties(
   query: string | undefined,
-  options: { clientsOnly?: boolean; limit?: number } = {},
+  options: { clientsOnly?: boolean; includeProspective?: boolean; limit?: number } = {},
 ): Promise<PartySummary[]> {
   const limit = Math.min(options.limit ?? 50, 100);
-  const filters = options.clientsOnly ? [eq(parties.isClient, true)] : [];
+  const clientFilter = options.includeProspective
+    ? or(eq(parties.isClient, true), isNotNull(parties.prospectiveSince))
+    : eq(parties.isClient, true);
+  const filters = options.clientsOnly && clientFilter ? [clientFilter] : [];
   let rows: PartyRow[];
   const text = (query ?? '').trim();
   if (!text) {
@@ -176,7 +187,8 @@ export async function searchParties(
       .orderBy(desc(parties.createdAt))
       .limit(limit);
   } else {
-    const looksNumeric = /\d{6,}/.test(text);
+    // Numbers are often typed with spaces or dashes: 082 123 4567, 800101 5009 087.
+    const looksNumeric = /\d{6,}/.test(text.replace(/[\s\-().+/]/g, ''));
     const entries = await indexEntries(
       looksNumeric
         ? { idNumber: text, registrationNumber: text, phone: text }
@@ -227,7 +239,13 @@ export async function searchParties(
 export async function markClient(partyId: string, conflictCheckId: string): Promise<void> {
   await db()
     .update(parties)
-    .set({ isClient: true, clientSince: new Date(), conflictCheckId, updatedAt: new Date() })
+    .set({
+      isClient: true,
+      clientSince: new Date(),
+      prospectiveSince: null,
+      conflictCheckId,
+      updatedAt: new Date(),
+    })
     .where(eq(parties.id, partyId));
 }
 
@@ -278,4 +296,77 @@ export async function isFirmClient(partyId: string): Promise<boolean> {
     .where(and(eq(caseParties.partyId, partyId), eq(caseParties.role, 'client')))
     .limit(1);
   return Boolean(link);
+}
+
+/**
+ * The register entry for the person an intake is about: an existing party
+ * with the same email or phone, or else a new prospective client. Prospective
+ * clients are found by client search and conflict checks; a conflict check
+ * still has to clear before one becomes a client.
+ */
+export async function partyForIntake(
+  person: { name: string; email?: string; phone?: string },
+  actor: Actor,
+): Promise<string> {
+  const contacts = await indexEntries({ email: person.email, phone: person.phone });
+  if (contacts.length) {
+    const [match] = await db()
+      .select({ partyId: partyIndex.partyId })
+      .from(partyIndex)
+      .where(
+        and(
+          inArray(
+            partyIndex.hash,
+            contacts.map((entry) => entry.hash),
+          ),
+          inArray(partyIndex.field, ['email', 'phone']),
+        ),
+      )
+      .limit(1);
+    if (match) {
+      return match.partyId;
+    }
+  }
+  const saved = await createParty(
+    {
+      kind: 'individual',
+      details: { name: person.name, email: person.email, phone: person.phone },
+    },
+    actor,
+    { prospective: true },
+  );
+  return saved.id;
+}
+
+/**
+ * Removes prospective clients left with nothing: no intake, no matter.
+ * Called after intakes are deleted (retention sweeps, POPIA erasure).
+ */
+export async function removeOrphanedProspects(partyIds: string[]): Promise<number> {
+  if (!partyIds.length) {
+    return 0;
+  }
+  const removed = await db()
+    .delete(parties)
+    .where(
+      and(
+        inArray(parties.id, partyIds),
+        eq(parties.isClient, false),
+        isNotNull(parties.prospectiveSince),
+        notExists(
+          db()
+            .select({ id: submissions.id })
+            .from(submissions)
+            .where(eq(submissions.partyId, parties.id)),
+        ),
+        notExists(
+          db()
+            .select({ id: caseParties.id })
+            .from(caseParties)
+            .where(eq(caseParties.partyId, parties.id)),
+        ),
+      ),
+    )
+    .returning({ id: parties.id });
+  return removed.length;
 }

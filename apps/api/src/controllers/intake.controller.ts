@@ -4,7 +4,7 @@ import * as intakeService from '../services/intake.service';
 
 async function createSubmission(req: Request, res: Response) {
   try {
-    const submission = await intakeService.createSubmission(req.body);
+    const submission = await intakeService.createSubmission(req.body, req.auth ?? {});
     res.status(201).json(submission);
   } catch (error) {
     sendError(res, error);

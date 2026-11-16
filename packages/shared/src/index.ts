@@ -477,6 +477,8 @@ export interface PartySummary {
   name: string;
   isClient: boolean;
   clientSince: string | null;
+  /** Came in through intake and is not (yet) a client. */
+  prospective: boolean;
   /** FICA status (clients). */
   ficaStatus?: FicaStatus;
 }

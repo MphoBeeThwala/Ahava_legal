@@ -31,6 +31,7 @@ import { ensureStringArray, triage, type TriageInput } from './ai.service';
 import { deidentify, type KnownPerson } from './deidentify';
 import { blindIndex, blindIndexCandidates, decryptJson, encryptJson } from './privacy.service';
 import * as auditService from './audit.service';
+import * as partyService from './party.service';
 
 /** The client as triage knows them: their name and contact details are removed. */
 function intakePeople(submission: IntakeSubmission): KnownPerson[] {
@@ -145,7 +146,10 @@ async function selectSubmissions(where?: SQL, limit = 100) {
     .limit(limit);
 }
 
-export async function createSubmission(input: unknown): Promise<PublicSubmission> {
+export async function createSubmission(
+  input: unknown,
+  actor: Actor = {},
+): Promise<PublicSubmission> {
   const submission = parse(intakeSubmissionSchema, input);
   const summary = deidentify(submission.matterSummary, intakePeople(submission));
 
@@ -167,6 +171,15 @@ export async function createSubmission(input: unknown): Promise<PublicSubmission
   if (!saved) {
     throw new Error('Submission was not stored');
   }
+
+  // The person goes into the register as a prospective client (or is
+  // matched to an existing party), so client search and conflict checks
+  // find them.
+  const partyId = await partyService.partyForIntake(
+    { name: submission.fullName, email: submission.email, phone: submission.phone },
+    actor,
+  );
+  await db().update(submissions).set({ partyId }).where(eq(submissions.id, saved.id));
 
   await auditService.logEventSafely(
     {
@@ -453,7 +466,15 @@ async function deleteRecords(submissionIds: string[], caseIds: string[]): Promis
     await db().delete(cases).where(inArray(cases.id, caseIds));
   }
   if (submissionIds.length) {
+    const linked = await db()
+      .select({ partyId: submissions.partyId })
+      .from(submissions)
+      .where(and(inArray(submissions.id, submissionIds), isNotNull(submissions.partyId)));
     await db().delete(submissions).where(inArray(submissions.id, submissionIds));
+    // Prospective clients that only existed because of these intakes go too.
+    await partyService.removeOrphanedProspects(
+      linked.map((row) => row.partyId).filter((id): id is string => Boolean(id)),
+    );
   }
   // Document bodies in the object store go once the deletion has committed.
   if (stored.length) {
