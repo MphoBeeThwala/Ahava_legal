@@ -1032,6 +1032,8 @@ export const submissions = pgTable(
     consentToStorage: boolean('consent_to_storage').notNull().default(false),
     /** The matter this intake became (set in the same transaction as the case). */
     caseId: uuid('case_id').references((): AnyPgColumn => cases.id, { onDelete: 'set null' }),
+    /** The person in the register this intake is about (a prospective client or a client). */
+    partyId: uuid('party_id').references((): AnyPgColumn => parties.id, { onDelete: 'set null' }),
     ...updatable,
   },
   (t) => [
@@ -1161,6 +1163,12 @@ export const parties = pgTable(
     kind: text('kind').notNull(),
     isClient: boolean('is_client').notNull().default(false),
     clientSince: timestamp('client_since', { withTimezone: true }),
+    /**
+     * Set when the party came in through intake and is not (yet) a client:
+     * a prospective client the register and conflict checks can find.
+     * Cleared when the party becomes a client.
+     */
+    prospectiveSince: timestamp('prospective_since', { withTimezone: true }),
     /** Encrypted PartyDetails (name, ID/registration number, contacts, address). */
     detailsEncrypted: text('details_encrypted').notNull(),
     /** The conflict check that cleared this party as a client. */

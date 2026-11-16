@@ -129,7 +129,15 @@ function ClientsPanel({ currentUser, onMatterOpened }: ClientsPanelProps) {
         notes: notes || undefined,
       });
       setResult(data);
-      if (decision !== 'conflict' && !client) {
+      if (decision !== 'conflict' && client && !client.isClient) {
+        // A prospective client from intake becomes a client once the check clears.
+        const converted = await api.post<PartyRecord>(`/clients/${client.id}/convert`, {
+          conflictCheckId: data.id,
+        });
+        setClient(converted.data);
+        setNotice({ tone: 'success', message: `${converted.data.partyNumber} is now a client.` });
+        await search(query);
+      } else if (decision !== 'conflict' && !client) {
         const id = subject.idNumber.trim();
         const created = await api.post<PartyRecord>('/clients', {
           kind: subject.kind,
@@ -244,11 +252,14 @@ function ClientsPanel({ currentUser, onMatterOpened }: ClientsPanelProps) {
                 </span>
                 <span className="muted">
                   {item.kind === 'entity' ? 'Organisation' : 'Individual'}
+                  {item.prospective ? ' · Prospective (from intake)' : ''}
                   {item.ficaStatus ? ` · FICA ${item.ficaStatus.replace('_', ' ')}` : ''}
                 </span>
               </button>
             ))}
-            {!list.length ? <p className="field-hint">No clients found.</p> : null}
+            {!list.length ? (
+              <p className="field-hint">No clients or prospective clients found.</p>
+            ) : null}
           </div>
           {selected ? (
             <div className="panel nested-panel">
@@ -274,7 +285,12 @@ function ClientsPanel({ currentUser, onMatterOpened }: ClientsPanelProps) {
                 ))}
                 {!selected.matters.length ? <li>None you can see.</li> : null}
               </ul>
-              {can('fica.read') ? (
+              {selected.prospective ? (
+                <p className="inline-status inline-info">
+                  Prospective client from intake. Run a conflict check to take them on as a client.
+                </p>
+              ) : null}
+              {can('fica.read') && selected.isClient ? (
                 <FicaPanel key={selected.id} clientId={selected.id} currentUser={currentUser} />
               ) : null}
               {can('conflicts.check') && can('matters.write') ? (
@@ -283,7 +299,7 @@ function ClientsPanel({ currentUser, onMatterOpened }: ClientsPanelProps) {
                   className="secondary-button"
                   onClick={() => startCheck(selected)}
                 >
-                  New matter for this client
+                  {selected.isClient ? 'New matter for this client' : 'Conflict check and take on'}
                 </button>
               ) : null}
             </div>

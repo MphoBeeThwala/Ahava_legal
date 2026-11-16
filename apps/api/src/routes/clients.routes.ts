@@ -27,7 +27,9 @@ clients.use(authenticateRequest);
 clients.get(
   '/',
   requirePermission('clients.read'),
-  handle((req) => partyService.searchParties(query(req), { clientsOnly: true })),
+  handle((req) =>
+    partyService.searchParties(query(req), { clientsOnly: true, includeProspective: true }),
+  ),
 );
 clients.post(
   '/',
