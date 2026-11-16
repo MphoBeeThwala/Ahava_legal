@@ -195,13 +195,16 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
             value={kindId}
             onChange={(event) => setKindId(event.target.value)}
           >
-            <option value="">Choose a document…</option>
+            <option value="">
+              Choose a document ({catalogue?.templates.length ?? 0} of{' '}
+              {catalogue?.kinds.length ?? 0} ready to draft)…
+            </option>
             {[...byCategory.entries()].map(([category, kinds]) => (
               <optgroup key={category} label={catalogue?.categories[category]}>
                 {kinds.map((item) => (
-                  <option key={item.id} value={item.id} disabled={item.availability !== 'template'}>
+                  <option key={item.id} value={item.id}>
                     {item.name}
-                    {item.availability === 'template' ? '' : ' (planned)'}
+                    {item.availability === 'template' ? '' : ' (template coming)'}
                   </option>
                 ))}
               </optgroup>
@@ -219,10 +222,27 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
       </div>
       {kind ? (
         <div className="drafting-kind">
+          <p>
+            <strong>{kind.name}</strong>{' '}
+            <span
+              className={`status-pill ${kind.availability === 'template' ? 'status-active' : 'status-past_due'}`}
+            >
+              {kind.availability === 'template' ? 'Ready to draft' : 'Template coming'}
+            </span>
+          </p>
           <p>{kind.purpose}</p>
           <p className="field-hint">
-            {kind.forum} · {kind.basis.join('; ')}
+            <strong>Used in:</strong> {kind.forum}
           </p>
+          <p className="field-hint">
+            <strong>Legal basis:</strong> {kind.basis.join('; ')}
+          </p>
+          {kind.availability !== 'template' ? (
+            <p className="field-hint">
+              The standard template for this document has not been written yet. It is listed so you
+              can see what it is for and what it must comply with.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
