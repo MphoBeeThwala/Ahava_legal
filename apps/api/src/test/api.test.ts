@@ -78,7 +78,7 @@ describe('authentication and roles', () => {
 });
 
 describe('intake to matter', () => {
-  test('submission requires consent', async () => {
+  test('submission requires consent to store the record', async () => {
     const res = await request(app)
       .post('/api/intake/submissions')
       .set('authorization', `Bearer ${token}`)
@@ -88,8 +88,8 @@ describe('intake to matter', () => {
         phone: '0821234567',
         practiceArea: 'Family Law',
         matterSummary: 'Urgent custody matter',
-        consentToAi: false,
-        consentToStorage: true,
+        consentToAi: true,
+        consentToStorage: false,
       });
     expect(res.status).toBe(400);
   });

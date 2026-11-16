@@ -16,8 +16,9 @@ const defaultState: IntakeFormState = {
   requestedOutcome: '',
   documentsMentioned: '',
   preferredLanguage: 'English',
-  consentToStorage: true,
-  consentToAi: true,
+  // Consent is asked for during the interview and recorded as given, never assumed.
+  consentToStorage: false,
+  consentToAi: false,
 };
 
 interface IntakeFormProps {
@@ -56,10 +57,13 @@ function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormPro
     try {
       const success = await onSubmit(form);
       if (success) {
+        const withAi = form.consentToAi;
         setForm(defaultState);
         setStatus({
           tone: 'success',
-          message: 'Encrypted intake submitted and assessment completed.',
+          message: withAi
+            ? 'Encrypted intake submitted and assessment completed.'
+            : 'Encrypted intake submitted. Not assessed by AI: the client did not consent.',
         });
       }
     } finally {
@@ -210,7 +214,8 @@ function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormPro
         </Field>
       </div>
 
-      <div className="consent-stack">
+      <fieldset className="consent-stack">
+        <legend className="field-label">Client consent (ask during the interview)</legend>
         <label className="consent-row" htmlFor="intake-consent-storage">
           <input
             id="intake-consent-storage"
@@ -218,8 +223,12 @@ function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormPro
             checked={form.consentToStorage}
             onChange={(event) => updateField('consentToStorage', event.target.checked)}
             disabled={isDisabled}
+            required
           />
-          <span>Consent to encrypted storage of the client record</span>
+          <span>
+            The client consents to the firm keeping their information securely (encrypted) for this
+            matter. <em>Required.</em>
+          </span>
         </label>
         <label className="consent-row" htmlFor="intake-consent-ai">
           <input
@@ -229,9 +238,17 @@ function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormPro
             onChange={(event) => updateField('consentToAi', event.target.checked)}
             disabled={isDisabled}
           />
-          <span>Consent to server-side AI assessment of the redacted brief</span>
+          <span>
+            The client was told that, to assess and research their matter, the firm uses AI and
+            other technology within the law and applicable guidelines, with their personal details
+            removed first, and consents to this.
+          </span>
         </label>
-      </div>
+        <p className="field-hint">
+          If the client does not consent to AI, leave it unticked: the intake is still taken and
+          marked &ldquo;Not assessed by AI&rdquo;, and AI research stays off for the matter.
+        </p>
+      </fieldset>
 
       <div className="action-row">
         <button

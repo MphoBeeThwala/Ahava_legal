@@ -53,6 +53,7 @@ function triageInput(submission: IntakeSubmission): TriageInput {
     requestedOutcome: submission.requestedOutcome,
     documentsMentioned: submission.documentsMentioned,
     people: intakePeople(submission),
+    consentToAi: submission.consentToAi,
   };
 }
 
