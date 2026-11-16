@@ -12,7 +12,21 @@ npm run ops -w apps/api -- sources import --code <code> --file act.pdf --title "
   [--level 1-6] [--court ZACC] [--validity in_force|amended|repealed|not_commenced|overruled] \
   [--effective YYYY-MM-DD] [--repealed YYYY-MM-DD] [--version YYYY-MM-DD] [--url ...]
 npm run ops -w apps/api -- sources sync-laws-africa [--place za] [--limit N]   # weekly job
+npm run ops -w apps/api -- sources sync-sca [--listing <url>] [--pages N] [--limit N]   # weekly job
 ```
+
+### Supreme Court of Appeal judgments (free)
+
+The SCA publishes its judgments on its own website; they are official texts (Copyright Act s12(8)(a)). Register the source once, then sync weekly (or set `SCA_SYNC_INTERVAL_HOURS=168`):
+
+```
+npm run ops -w apps/api -- sources add --code sca --name "Supreme Court of Appeal" --kind case_law \
+  --publisher "Supreme Court of Appeal" --url https://www.supremecourtofappeal.org.za \
+  --licence "Official text, Copyright Act s12(8)(a)" --approved-by <operator email>
+npm run ops -w apps/api -- sources sync-sca
+```
+
+The sync reads the year listings (`SCA_JUDGMENT_LISTINGS`, default 2026 and 2025; add each new year's listing when the court opens it), honours robots.txt, waits two seconds between requests, downloads only judgments it doesn't hold, and imports each at level 2 with its neutral citation, judgment date and the court's summary page as the link. Media summaries are not imported. Older judgments: `--listing <year listing URL> --pages 20 --limit 200`.
 
 Kinds: `legislation`, `regulation`, `case_law`, `rules`, `practice_directive`, `tribunal`, `guidance`, `journal`, `treatise`, `other`.
 

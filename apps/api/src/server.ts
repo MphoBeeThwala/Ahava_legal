@@ -15,6 +15,7 @@ import { scheduleAnchoring } from './services/audit-anchor.service';
 import { scheduleReminders } from './services/calendar.service';
 import { sendError } from './lib/http';
 import { scheduleCourtRollSync } from './services/court-roll.service';
+import { scheduleScaSync } from './services/sca-judgments';
 import { domainCheckValue, readAsset } from './services/white-label.service';
 import * as supportService from './services/support.service';
 import { createRateLimiter, requestLogger, securityHeaders } from './middleware/security';
@@ -249,6 +250,7 @@ if (require.main === module) {
       scheduleAnchoring();
       scheduleReminders();
       scheduleCourtRollSync();
+      scheduleScaSync();
       const server = app.listen(port, () => {
         console.log(`Legal practice API listening at http://localhost:${port}`);
       });
