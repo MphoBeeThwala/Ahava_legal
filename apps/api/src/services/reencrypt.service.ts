@@ -23,6 +23,7 @@ import {
   calendarEvents,
   matterPrescriptions,
   researchRequests,
+  documentDrafts,
   aiCalls,
   firmPrecedents,
   trustAccounts,
@@ -295,11 +296,16 @@ export async function pendingReencryption(): Promise<ReencryptStatus> {
     db().select({ value: count() }).from(parties).where(staleParties(version)),
     db().select({ value: count() }).from(conflictChecks).where(staleChecks(version)),
   ]);
+  // Drafts (drafting) count with documents.
+  const [dr] = await db()
+    .select({ value: count() })
+    .from(documentDrafts)
+    .where(notOnVersion(documentDrafts.valuesEncrypted, version));
   return {
     activeVersion: version,
     pending: {
       submissions: s?.value ?? 0,
-      documents: d?.value ?? 0,
+      documents: (d?.value ?? 0) + (dr?.value ?? 0),
       users: u?.value ?? 0,
       parties: p?.value ?? 0,
       conflictChecks: c?.value ?? 0,
@@ -476,6 +482,18 @@ async function reencryptBatch(): Promise<ReencryptCounts> {
       .where(eq(matterPrescriptions.id, row.id));
   }
 
+  const drafts = await db()
+    .select()
+    .from(documentDrafts)
+    .where(notOnVersion(documentDrafts.valuesEncrypted, version))
+    .limit(BATCH);
+  for (const row of drafts) {
+    await db()
+      .update(documentDrafts)
+      .set({ valuesEncrypted: await encryptJson(await decryptJson(row.valuesEncrypted)) })
+      .where(eq(documentDrafts.id, row.id));
+  }
+
   const briefs = await db()
     .select()
     .from(researchRequests)
@@ -640,7 +658,7 @@ async function reencryptBatch(): Promise<ReencryptCounts> {
 
   return {
     submissions: subs.length,
-    documents: docs.length,
+    documents: docs.length + drafts.length,
     users: people.length,
     parties: partyRows.length,
     conflictChecks: checks.length,
@@ -853,6 +871,10 @@ export async function pruneRetiredKeys(): Promise<number[]> {
         .from(cases)
         .where(sql`${cases.clientUpdateEncrypted} like ${prefix}`),
     ]);
+    const [dft] = await db()
+      .select({ value: count() })
+      .from(documentDrafts)
+      .where(sql`${documentDrafts.valuesEncrypted} like ${prefix}`);
     const [[stk], [stm]] = await Promise.all([
       db()
         .select({ value: count() })
@@ -888,6 +910,7 @@ export async function pruneRetiredKeys(): Promise<number[]> {
       cup,
       stk,
       stm,
+      dft,
     ].some((row) => row?.value);
     if (!inUse) {
       await deleteKey(key.id);

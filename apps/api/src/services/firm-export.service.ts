@@ -126,6 +126,15 @@ export async function exportFirm(firm: FirmRow): Promise<FirmExport> {
         contentBase64: content.toString('base64'),
       }));
 
+      // Drafts made from the standard templates, with their field values.
+      const drafts = await db().select().from(schema.documentDrafts);
+      tables.documentDrafts = await Promise.all(
+        drafts.map(async ({ valuesEncrypted, ...rest }) => ({
+          ...rest,
+          values: await decryptJson(valuesEncrypted),
+        })),
+      );
+
       // The research brief and what was sent to AI are the firm's records too.
       const research = await db().select().from(schema.researchRequests);
       tables.researchRequests = await Promise.all(
