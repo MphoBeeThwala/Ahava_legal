@@ -46,6 +46,7 @@ import * as subscriptions from '../services/subscription.service';
 import * as corpus from '../services/corpus.service';
 import { syncLawsAfrica } from '../services/laws-africa';
 import { extractText } from '../services/court-roll-sources';
+import { syncScaJudgments } from '../services/sca-judgments';
 
 const OPERATOR = { fullName: 'Platform operations', role: 'system' };
 
@@ -252,6 +253,16 @@ async function sources(action: string, values: Record<string, string | undefined
         ? `${values.citation}: imported ${result.passages} passages`
         : `${values.citation}: unchanged`,
     );
+  } else if (action === 'sync-sca') {
+    // Supreme Court of Appeal judgments from the court's website.
+    const result = await syncScaJudgments({
+      sourceCode: values.code ?? 'sca',
+      listings: values.listing ? [values.listing] : undefined,
+      maxPages: values.pages ? Number(values.pages) : undefined,
+      limit: values.limit ? Number(values.limit) : undefined,
+    });
+    console.log(JSON.stringify(result));
+    if (result.failed.length) process.exitCode = 1;
   } else if (action === 'sync-laws-africa') {
     const token = process.env.LAWS_AFRICA_TOKEN;
     if (!token) {
@@ -306,6 +317,8 @@ async function main(): Promise<void> {
       repealed: { type: 'string' },
       version: { type: 'string' },
       place: { type: 'string' },
+      listing: { type: 'string' },
+      pages: { type: 'string' },
       limit: { type: 'string' },
       seats: { type: 'string' },
     },
@@ -425,7 +438,7 @@ async function main(): Promise<void> {
     );
   } else {
     throw new Error(
-      'Usage: ops keys status|rotate|reencrypt|rewrap|prune [--slug <slug>] | ops anchor | ops reminders | ops domains | ops restore-check | ops subscriptions | ops courts list|set|remove | ops trust enable|disable --slug <slug> | ops sources list|add|suspend|approve|import|sync-laws-africa | ops plans list|set|disable | ops subscription comp --slug <slug> | ops court-rolls [--file <roll> --division <code> --title <title>] | ops operator create|list|disable|enable',
+      'Usage: ops keys status|rotate|reencrypt|rewrap|prune [--slug <slug>] | ops anchor | ops reminders | ops domains | ops restore-check | ops subscriptions | ops courts list|set|remove | ops trust enable|disable --slug <slug> | ops sources list|add|suspend|approve|import|sync-sca [--listing <url>] [--pages N] [--limit N]|sync-laws-africa | ops plans list|set|disable | ops subscription comp --slug <slug> | ops court-rolls [--file <roll> --division <code> --title <title>] | ops operator create|list|disable|enable',
     );
   }
 }
