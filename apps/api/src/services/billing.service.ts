@@ -820,7 +820,7 @@ export async function sendInvoice(id: string, input: unknown, actor: Actor = {})
     ],
   });
   if (!sent) {
-    throw httpError('Email is not set up for this installation (SMTP_URL)', 503);
+    throw httpError('Email is not set up for this installation (SMTP_URL or SMTP2GO_API_KEY)', 503);
   }
   const [saved] = await db()
     .update(invoices)

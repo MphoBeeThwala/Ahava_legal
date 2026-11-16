@@ -124,9 +124,9 @@ function configWarnings(env: NodeJS.ProcessEnv = process.env): string[] {
   if (env.NODE_ENV !== 'production') {
     return warnings;
   }
-  if (!String(env.SMTP_URL || '').trim()) {
+  if (!String(env.SMTP_URL || '').trim() && !String(env.SMTP2GO_API_KEY || '').trim()) {
     warnings.push(
-      'SMTP_URL is not set: invite and reset links are shown to administrators but not emailed',
+      'SMTP_URL is not set (nor SMTP2GO_API_KEY): invite and reset links are shown to administrators but not emailed',
     );
   }
   if (

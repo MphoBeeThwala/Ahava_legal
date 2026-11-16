@@ -30,6 +30,7 @@ process.env.SUBSCRIPTION_TRIAL_SEATS ??= '1000';
 process.env.RATE_LIMIT_MAX = '100000';
 delete process.env.OIDC_ISSUER;
 delete process.env.SMTP_URL;
+delete process.env.SMTP2GO_API_KEY;
 process.env.LOG_HTTP = 'false';
 process.env.FIRM_NAME = 'Nkosi & Partners Inc.';
 process.env.FIRM_SHORT_NAME = 'Nkosi';
