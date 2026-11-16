@@ -2,7 +2,7 @@
 
 Research notes behind the drafting module (roadmap 15a). The catalogue (`packages/shared/src/drafting.ts`) lists every kind of document in daily use in South African legal practice. The standard templates (`apps/api/src/drafting/templates/`) are versioned in code, so every change to standard wording is reviewed like any other change.
 
-**Wording is a joint effort.** Templates ship as `review: unreviewed`. A practising attorney reviews the standard wording, which is recorded in the template's `review` field with name and date. Until then, every draft carries a note to read the whole document before finalising. Every draft goes **draft → review → final**: anyone with `drafting.use` drafts and submits, and an attorney (`drafting.approve`) finalises. Finalising is blocked while any "must fix" check fails, and it saves the document to the matter.
+**Wording is a joint effort.** Templates ship as `review: unreviewed`. The designated reviewer of the standard wording is **Dumisani Lukhele** (admitted attorney). Each template is marked reviewed only after he has signed it off, which is recorded in the template's `review` field with name and date. Until then, every draft carries a note to read the whole document before finalising. Every draft goes **draft → review → final**: anyone with `drafting.use` drafts and submits, and an attorney (`drafting.approve`) finalises. Finalising is blocked while any "must fix" check fails, and it saves the document to the matter.
 
 ## Format rules the generator follows
 

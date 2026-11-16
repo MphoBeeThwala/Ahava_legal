@@ -397,7 +397,12 @@ function App() {
       if (!frame) {
         frame = window.requestAnimationFrame(() => {
           frame = 0;
-          setHeaderCondensed(window.scrollY > 40);
+          // Hysteresis: condense past 140px, expand again only near the top,
+          // and only on pages long enough to scroll well past the change, so
+          // the banner's own change in height can't flip it back (flicker).
+          const y = window.scrollY;
+          const room = document.documentElement.scrollHeight - window.innerHeight;
+          setHeaderCondensed((condensed) => (condensed ? y > 8 : y > 140 && room > 320));
         });
       }
     };
