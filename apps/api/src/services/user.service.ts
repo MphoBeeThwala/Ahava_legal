@@ -30,7 +30,7 @@ import {
   uuidSchema,
 } from '../validation/schemas';
 import { firmOrigin } from './firm.service';
-import { sendMail } from './mail.service';
+import { sendMailOrShowLink } from './mail.service';
 import * as authService from './auth.service';
 import * as sessionService from './session.service';
 import * as auditService from './audit.service';
@@ -105,7 +105,7 @@ export async function createInvite(input: unknown, actor: Actor): Promise<LinkIs
   const firm = currentFirm();
   const brand = getFirmBrand(firm);
   const url = `${firmOrigin(firm)}/invite/${token}`;
-  const emailed = await sendMail({
+  const emailed = await sendMailOrShowLink({
     to: saved.email,
     subject: `You're invited to ${brand.firmName}`,
     text: [
@@ -421,7 +421,7 @@ async function issueReset(user: UserRow): Promise<{ url: string; emailed: boolea
     });
   const firm = currentFirm();
   const url = `${firmOrigin(firm)}/reset-password/${token}`;
-  const emailed = await sendMail({
+  const emailed = await sendMailOrShowLink({
     to: user.email,
     subject: `Reset your ${getFirmBrand(firm).firmName} password`,
     text: [

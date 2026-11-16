@@ -47,7 +47,7 @@ Requires Node 22+.
 3. Never edit a migration that has been applied anywhere, and never change a shared database by hand.
 
 ## Staff accounts and sign-in
-- **Invite only.** There is no public registration. Administrators invite staff under **Account & team**; the firm's first administrator is invited with the CLI (`npm run firm -w apps/api -- create … --admin-email …` or `… invite --slug … --email …`). Invite and reset links are emailed when `SMTP_URL` is set, and are always shown once to whoever created them.
+- **Invite only.** There is no public registration. Administrators invite staff under **Account & team**; the firm's first administrator is invited with the CLI (`npm run firm -w apps/api -- create … --admin-email …` or `… invite --slug … --email …`). Invite and reset links are emailed when mail is set up (`SMTP_URL`, or `SMTP2GO_API_KEY` where outbound SMTP is blocked), and are always shown once to whoever created them. If sending fails, the invite or reset still goes ahead and the link is shown instead.
 - **Two-factor sign-in is mandatory** for password accounts: after the password, an authenticator-app code (TOTP) or a one-time recovery code. New accounts set up the authenticator before their first session. Codes can't be replayed.
 - **Microsoft Entra External ID** sign-in is enabled with `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`. Enforce MFA in Entra (user flow / Conditional Access); `OIDC_REQUIRE_MFA_CLAIM=true` also checks the token. An Entra identity is linked to an account only by accepting an invite with it — emails are never used to match accounts. Register `https://<firm address>/api/auth/oidc/callback` as a redirect URI for every firm.
 - **Microsoft 365 sign-in per firm** (Entra ID). The platform registers one multi-tenant app (`ENTRA_WORKFORCE_CLIENT_ID`, `ENTRA_WORKFORCE_CLIENT_SECRET`). A firm's administrators enter their directory (tenant) ID and work email domains under **Account & team → Microsoft 365**, and their Microsoft 365 admin approves the app with the link shown there.
@@ -80,7 +80,7 @@ One deployment serves many firms. Every tenant table has a `firm_id`, and Postgr
   npm run firm -w apps/api -- list
   ```
 
-  The admin's invitation link is printed once (and emailed when `SMTP_URL` is set); share it securely. To invite another administrator later: `npm run firm -w apps/api -- invite --slug nkosi --email it@nkosi.co.za --name "IT Admin"`.
+  The admin's invitation link is printed once (and emailed when mail is set up); share it securely. To invite another administrator later: `npm run firm -w apps/api -- invite --slug nkosi --email it@nkosi.co.za --name "IT Admin"`.
 - The app connects as the database owner but runs every request as the `app_tenant` role (`SET LOCAL ROLE`), which cannot bypass RLS. Migration `0001` creates that role and grants it to the connecting user; see `PROD_OPERATIONS.md` if your server does not allow that.
 
 ### Bootstrap branding
@@ -164,7 +164,7 @@ When the firms table is empty, the server creates a `default` firm from these va
   - **Void:** an administrator can void an unpaid invoice. It keeps its number and its time returns to work in progress.
 - **VAT:** VAT (`VAT_RATE`, default 15%) applies to fees and to vatable disbursements. A VAT vendor's PDF is headed *Tax invoice* and shows the details the VAT Act requires.
 - **Payments:** payments (EFT, card, cash, transfer from trust, other) can be part or full, and can't exceed what is owing. Administrators can reverse a payment recorded in error.
-- **Documents and email:** invoices and client statements are branded PDFs. **Email** sends the invoice PDF to the client's address (`SMTP_URL` must be set).
+- **Documents and email:** invoices and client statements are branded PDFs. **Email** sends the invoice PDF to the client's address (`SMTP_URL` or `SMTP2GO_API_KEY` must be set).
 - **Statements and aging:** a client statement has a running balance and aging (current, 30, 60, 90 and 120+ days past due). The aging report covers all outstanding invoices, by client.
 - **Encryption:** subjects, notes and line descriptions can name people, so they are encrypted with the firm's key. Amounts, numbers and dates stay readable for reports.
 - **Not covered:** trust accounting under the Legal Practice Act (section 86) is not built yet. The trust/operating ledger is a simple record.
@@ -192,7 +192,7 @@ Who sees what:
   - The registered and trading names, main and accent colours, and the matter and invoice number prefixes are set in the app.
   - Colours must contrast at least 4.5:1 with the white text placed on them (WCAG AA).
   - The logo (PNG, JPEG or WebP, up to 1 MB) and an optional browser icon are stored with the firm and served before sign-in at `/api/tenant/logo` and `/api/tenant/icon`, with versioned links. SVG is refused because it can carry script. The logo also goes on PDFs.
-- **Email:** the platform sends from `MAIL_FROM`, in the firm's trading name, with replies going to the firm's reply-to address.
+- **Email:** through SMTP (`SMTP_URL`) or SMTP2GO's HTTPS API (`SMTP2GO_API_KEY`, which wins when both are set; use it on hosts that block SMTP ports, such as Railway's Hobby plan). The platform sends from `MAIL_FROM`, in the firm's trading name, with replies going to the firm's reply-to address.
 - **Custom domains:** a firm adds its own address (e.g. `portal.firm.co.za`) and publishes two DNS records: a TXT record proving ownership, and a CNAME to `CUSTOM_DOMAIN_CNAME_TARGET` (the Front Door endpoint, which also issues the certificate). **Check now** (or the hourly `npm run ops -w apps/api -- domains` job) verifies the TXT record, then that `https://<domain>/.well-known/firm-domain-check` answers with a value only this platform can produce. Only then does the domain become the firm's main address, used in email links.
 
 ## Calendar and prescription

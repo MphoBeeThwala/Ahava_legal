@@ -13,7 +13,7 @@
 //
 // Uses DATABASE_URL (or local PGlite) like the server, with the same secrets.
 // Run `npm run build` first. --admin-email / invite print an invitation link
-// for an administrator (also emailed when SMTP_URL is set); the admin sets
+// for an administrator (also emailed when mail is set up); the admin sets
 // their own password and authenticator app when they accept it.
 
 import '../load-env';
