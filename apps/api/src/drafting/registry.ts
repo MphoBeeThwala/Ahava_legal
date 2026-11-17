@@ -2,6 +2,21 @@
 // the standard wording is reviewed like any other change.
 import type { DraftTemplateSummary } from '@ahava88/shared';
 import type { DraftTemplate } from './template';
+import {
+  exParteNoticeOfMotion,
+  urgentApplication,
+  exception,
+  rule30Notice,
+  discoveryAffidavit,
+  preTrialMinute,
+  headsOfArgument,
+  practiceNote,
+  draftOrder,
+  indexAndPagination,
+  noticeOfSetDown,
+  leaveToAppeal,
+  settlementAgreementOrder,
+} from './templates/high-court';
 import { letterOfDemand, ncaS129Notice, organOfStateNotice } from './templates/correspondence';
 import { affidavit, noticeOfMotion } from './templates/court';
 import { acknowledgmentOfDebt, contingencyFeesAgreement, suretyship } from './templates/commercial';
@@ -60,6 +75,19 @@ export const TEMPLATES: readonly DraftTemplate[] = [
   arbitrationRequest,
   employmentContract,
   generalPowerOfAttorney,
+  exParteNoticeOfMotion,
+  urgentApplication,
+  exception,
+  rule30Notice,
+  discoveryAffidavit,
+  preTrialMinute,
+  headsOfArgument,
+  practiceNote,
+  draftOrder,
+  indexAndPagination,
+  noticeOfSetDown,
+  leaveToAppeal,
+  settlementAgreementOrder,
 ];
 
 export function findTemplate(id: string): DraftTemplate | undefined {
