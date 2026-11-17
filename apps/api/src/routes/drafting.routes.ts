@@ -68,7 +68,7 @@ router.post(
   '/cases/:caseId/drafts/:draftId/finalise',
   authenticateRequest,
   requirePermission('drafting.approve', 'documents.write', 'matters.read'),
-  handle((req) => drafting.finaliseDraft(caseId(req), draftId(req), req.auth ?? {})),
+  handle((req) => drafting.finaliseDraft(caseId(req), draftId(req), req.body, req.auth ?? {})),
 );
 
 router.delete(

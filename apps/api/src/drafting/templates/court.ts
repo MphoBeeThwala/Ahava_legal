@@ -5,7 +5,7 @@ import { isBusinessDay, longDate } from '../days';
 import type { Block, CourtHeading } from '../model';
 import {
   COURT_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   lines,
   or,
   v,
@@ -59,7 +59,7 @@ export const affidavit: DraftTemplate = {
     'Justices of the Peace and Commissioners of Oaths Act 16 of 1963',
     'Regulations Governing the Administering of an Oath or Affirmation, GN R1258 of 21 July 1972 (regs 1–4, 7)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath', firstPartyRole: 'Applicant', secondPartyRole: 'Respondent' },
   sections: [
@@ -180,7 +180,7 @@ export const noticeOfMotion: DraftTemplate = {
     'Uniform Rule 62 (form of documents)',
     'Divisional practice directives (e.g. Gauteng Consolidated Practice Directive 1 of 2024)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { opposeDays: '5', answerDays: '15' },
   sections: [

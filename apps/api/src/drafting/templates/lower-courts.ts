@@ -8,7 +8,7 @@ import {
   AGREEMENT_FORMAT,
   COURT_FORMAT,
   LETTER_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   letterhead,
   lines,
   or,
@@ -94,7 +94,7 @@ export const mcSummons: DraftTemplate = {
     'Magistrates’ Courts Act 32 of 1944 ss 28 (jurisdiction over persons), 29 (causes of action and monetary limits)',
     'Magistrates’ Courts Rules, rule 13 (notice of intention to defend)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { defendDays: '10' },
   sections: [
@@ -274,7 +274,7 @@ export const mcApplication: DraftTemplate = {
     'Magistrates’ Courts Rules, rule 55(1) (at least 10 days to oppose; answering affidavit 10 days after notice of opposition)',
     'Annexure 1, Form 1A (notice of motion, long form)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { opposeDays: '10', answerDays: '10' },
   sections: [
@@ -392,7 +392,7 @@ export const mcPlea: DraftTemplate = {
   basis: [
     'Magistrates’ Courts Rules, rule 17 (plea within 20 days after notice of intention to defend; admit, deny or confess and avoid)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     {
@@ -505,7 +505,7 @@ export const section65Documents: DraftTemplate = {
     'Magistrates’ Courts Act 32 of 1944 ss 65A, 65D, 65E, as amended by the Courts of Law Amendment Act 7 of 2017',
     'Magistrates’ Courts Rules, Annexure 1 (notice to appear in terms of s 65A(1))',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     {
@@ -633,7 +633,7 @@ export const certificationOfCopies: DraftTemplate = {
     'Justices of the Peace and Commissioners of Oaths Act 16 of 1963',
     'Practice of the receiving institution (banks, government departments)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -703,7 +703,7 @@ export const bailAffidavit: DraftTemplate = {
     's 60(11B) (the accused must disclose previous convictions and pending charges)',
     'GN R1258 of 1972',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath', schedule: 'Neither' },
   sections: [
@@ -910,7 +910,7 @@ export const s112Statement: DraftTemplate = {
     'Criminal Procedure Act 51 of 1977 s 112(2)',
     'Criminal Law Amendment Act 105 of 1997 (minimum sentences, where they apply)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     {
@@ -1042,7 +1042,7 @@ export const representationsToNpa: DraftTemplate = {
     'NPA Prosecution Policy and Policy Directives',
     'Child Justice Act 75 of 2008 (diversion of children)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   defaults: { request: 'Withdrawal of the charges' },
   sections: [
@@ -1152,7 +1152,7 @@ export const criminalAppealNotice: DraftTemplate = {
     's 316 (High Court: within 14 days after sentence)',
     'Magistrates’ Courts Rules, rule 67 (criminal appeals)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { against: 'Conviction and sentence', trialCourt: 'Lower court' },
   sections: [

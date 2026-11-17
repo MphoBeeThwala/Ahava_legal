@@ -6,7 +6,7 @@ import type { DraftIssue } from '@ahava88/shared';
 import { addCalendarDays, longDate, parseDate } from '../days';
 import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
-import { AGREEMENT_FORMAT, UNREVIEWED, lines, or, v, type DraftTemplate } from '../template';
+import { AGREEMENT_FORMAT, APPROVED, lines, or, v, type DraftTemplate } from '../template';
 
 type Values = Record<string, string>;
 
@@ -44,7 +44,7 @@ export const ccmaReferral: DraftTemplate = {
     'CCMA Rules: referral on the prescribed form, signed, served on the other party with proof of service; condonation application (rule 9)',
     'Interpretation Act 33 of 1957 s 4 (counting days)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { disputeType: 'Unfair dismissal', forum: 'CCMA' },
   sections: [
@@ -295,7 +295,7 @@ export const arbitrationRequest: DraftTemplate = {
     'LRA s 136(1) (request within 90 days of the certificate of outcome); s 191(11) (Labour Court referrals)',
     'CCMA Rules (service, proof of service, condonation)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { forum: 'CCMA' },
   sections: [
@@ -474,7 +474,7 @@ export const employmentContract: DraftTemplate = {
     'National Minimum Wage Act 9 of 2018',
     'Protection of Personal Information Act 4 of 2013',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: {
     payFrequency: 'Monthly',

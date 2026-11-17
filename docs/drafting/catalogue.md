@@ -94,7 +94,9 @@ Business and court days skip weekends and public holidays, and for a notice of i
 
 The catalogue has 12 categories: correspondence, engagement, High Court, Magistrates' Courts, affidavits, labour, criminal, family, property, estates, commercial and practice. Each entry gives its purpose, forum and legal basis. Kinds without a template (none at present; new kinds can be added) show as *planned*.
 
-**All 77 kinds in the catalogue now have a standard template**, written in seven batches (PRs #62–#72). All are *unreviewed*: they wait for Dumisani Lukhele's review before they are marked reviewed. Suggested review order: the templates used most (letters of demand, affidavits, summonses and pleas, leases and deeds of sale, employment documents), then those with prescribed forms that may have changed (contingency fees agreement, CCMA and Labour Court forms, Master's forms, deeds office documents).
+**Every kind in the catalogue has a standard template (78).** The first 77 were written in seven batches (PRs #62–#72) and **approved for use by Dumisani Lukhele (admitted attorney) on 17 November 2026**; each now carries `review: { status: 'reviewed', by: 'Dumisani Lukhele', on: '2026-11-17' }`. The legal memorandum was added after his review and is *unreviewed* until he signs it off.
+
+His recommendation, built into the app: **the attorney drafting each document remains responsible for checking its grammar, its wording and every input against the matter.** Every draft shows that note, and finalising a draft requires the attorney to confirm, by ticking a box, that they have done so (the API refuses to finalise without it).
 
 ## Adding a template
 

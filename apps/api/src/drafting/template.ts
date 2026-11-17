@@ -52,6 +52,13 @@ export const AGREEMENT_FORMAT: DraftFormat = {
 
 export const UNREVIEWED = { status: 'unreviewed' as const };
 
+/** Standard wording approved for use by the reviewing attorney (review tracker, 17 November 2026). */
+export const APPROVED = {
+  status: 'reviewed' as const,
+  by: 'Dumisani Lukhele',
+  on: '2026-11-17',
+};
+
 export const v = (values: Record<string, string>, key: string) => (values[key] ?? '').trim();
 
 /** Non-empty lines of a long-text field. */

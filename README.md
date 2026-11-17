@@ -171,7 +171,7 @@ When the firms table is empty, the server creates a `default` firm from these va
 
 ## Drafting
 
-Under Cases, with a matter open: **Draft a document**. The catalogue lists every kind of document used in practice. Every kind has a standard template (77 at present), each shipped as *unreviewed* until an attorney reviews its wording. The research, format rules and statutory checks are in [`docs/drafting/catalogue.md`](docs/drafting/catalogue.md).
+Under Cases, with a matter open: **Draft a document**. The catalogue lists every kind of document used in practice. Every kind has a standard template (78 at present). The standard wording was approved by the reviewing attorney on 17 November 2026; the attorney drafting each document remains responsible for its grammar, wording and inputs, and confirms this when finalising. The research, format rules and statutory checks are in [`docs/drafting/catalogue.md`](docs/drafting/catalogue.md).
 
 - Fields fill in from the matter (client, case number, the firm's details). Staff fill in the rest, and checks flag what doesn't meet the standard as *must fix*, *should fix* or *note*, each with its source.
 - **Draft → review → final.** Staff with `drafting.use` draft and submit. An attorney (`drafting.approve`) finalises, which is blocked while a *must fix* remains and saves the document to the matter. Drafts download as Word or PDF at any stage.

@@ -4,7 +4,7 @@ import type { DraftIssue } from '@ahava88/shared';
 import { longDate } from '../days';
 import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
-import { AGREEMENT_FORMAT, UNREVIEWED, lines, or, v, type DraftTemplate } from '../template';
+import { AGREEMENT_FORMAT, APPROVED, lines, or, v, type DraftTemplate } from '../template';
 
 const signedAt = (values: Record<string, string>, who: string) =>
   `SIGNED at ${or(v(values, 'place'), 'place')} on ${v(values, 'signDate') ? longDate(v(values, 'signDate')) : 'this ____ day of __________________ 20____'}${who}.`;
@@ -27,7 +27,7 @@ export const specialPowerOfAttorney: DraftTemplate = {
     'Common law of agency (mandate)',
     'Uniform Rule 7 (authority in litigation, when challenged)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -140,7 +140,7 @@ export const generalPowerOfAttorney: DraftTemplate = {
     'Common law of agency (mandate; ends on the principal’s death or mental incapacity)',
     'Deeds Registries Act 47 of 1937 s 20 (land is transferred under a special power of attorney)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { substitution: 'Yes' },
   sections: [
@@ -265,7 +265,7 @@ export const mandateFeeAgreement: DraftTemplate = {
     'LPC Code of Conduct',
     'Contingency Fees Act 66 of 1997 (not for no-win-no-fee arrangements: use its prescribed agreement)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { feeBasis: 'Hourly rate', billing: 'monthly' },
   sections: [
@@ -450,7 +450,7 @@ export const lastWill: DraftTemplate = {
     "Children's Act 38 of 2005 s 27 (appointing a guardian by will)",
     'Administration of Estates Act 66 of 1965 s 23 (security by executors)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { revoke: 'Yes', securityWaived: 'Yes', maritalStatus: 'Unmarried' },
   sections: [

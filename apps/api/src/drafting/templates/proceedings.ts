@@ -7,7 +7,7 @@ import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
 import {
   COURT_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   lines,
   or,
   v,
@@ -121,7 +121,7 @@ export const answeringAffidavit: DraftTemplate = {
     'Wightman t/a JW Construction v Headfour (Pty) Ltd 2008 (3) SA 371 (SCA) (a real, genuine and bona fide dispute)',
     'Regulations under the Justices of the Peace and Commissioners of Oaths Act 16 of 1963 (GN R1258 of 1972)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath' },
   sections: [
@@ -255,7 +255,7 @@ export const replyingAffidavit: DraftTemplate = {
     'The applicant must make out its case in the founding affidavit (e.g. Director of Hospital Services v Mistry 1979 (1) SA 626 (A))',
     'Regulations under the Justices of the Peace and Commissioners of Oaths Act 16 of 1963 (GN R1258 of 1972)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath' },
   sections: [
@@ -353,7 +353,7 @@ export const simpleSummons: DraftTemplate = {
     'Uniform Rule 20(1) (declaration within 15 days of the notice to defend)',
     'Uniform Rule 41A (mediation notice)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { defendDays: '10' },
   sections: [
@@ -512,7 +512,7 @@ export const noticeOfBar: DraftTemplate = {
   purpose:
     'Calls on a party who is out of time to deliver its pleading within five days, failing which it is barred.',
   basis: ['Uniform Rule 26'],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { pleading: 'plea', ourRole: 'Plaintiff' },
   sections: [
@@ -616,7 +616,7 @@ export const rule41aNotice: DraftTemplate = {
     'Uniform Rule 41A(2)(b) (defendant or respondent: with the notice of intention to defend or oppose)',
     'Uniform Rule 41A(2)(c) (reasons why the dispute is or is not capable of mediation)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { ourRole: 'Plaintiff', agrees: 'Agrees' },
   sections: [
