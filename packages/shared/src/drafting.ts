@@ -124,6 +124,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Reports progress, advice and next steps to the client.',
     'Attorney to client',
     ['LPC Code of Conduct (duty to keep the client informed)'],
+    'template',
   ),
 
   // ------------------------------------------------------------ engagement
@@ -176,6 +177,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Sets out costs item by item for taxation by the taxing master.',
     'Taxing master',
     ['Uniform Rule 70 and tariff', "Magistrates' Courts Rules tariff"],
+    'template',
   ),
 
   // ------------------------------------------------------------ High Court
@@ -649,6 +651,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Common law of lease',
       'Formalities in respect of Leases of Land Act 18 of 1969 (long leases)',
     ],
+    'template',
   ),
   k(
     'poa-to-pass-transfer',
@@ -672,6 +675,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Deeds Registries Act ss 15, 15A',
       'Regulations 26, 29 (extent in words and figures), 43 (preparation certificate with LPC number); prescribed Form E',
     ],
+    'template',
   ),
   k(
     'mortgage-bond',
@@ -680,6 +684,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Registers a bond over land as security for a debt.',
     'Deeds Office',
     ['Deeds Registries Act s 50', 'Regulation 43'],
+    'template',
   ),
   k(
     'notarial-deed-servitude',
@@ -688,6 +693,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Creates a servitude over land, executed before a notary and registered.',
     'Notary / Deeds Office',
     ['Deeds Registries Act s 65'],
+    'template',
   ),
 
   // ------------------------------------------------------------ estates
@@ -709,6 +715,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Amends an existing will, executed with the same formalities.',
     'Testator',
     ['Wills Act 7 of 1953 s 2(1)(a)'],
+    'template',
   ),
   k(
     'estate-reporting',
@@ -717,6 +724,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Reports the estate to the Master: death notice, inventory, acceptance of trust as executor.',
     'Master of the High Court',
     ['Administration of Estates Act 66 of 1965 ss 7, 9', "Master's prescribed forms"],
+    'template',
   ),
   k(
     'liquidation-account',
@@ -725,6 +733,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Accounts for the administration of the estate, for the Master and inspection.',
     'Master of the High Court',
     ['Administration of Estates Act s 35'],
+    'template',
   ),
 
   // ------------------------------------------------------------ commercial
@@ -757,6 +766,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Protects confidential information shared between parties.',
     'Contracting parties',
     ['Common law of contract', 'POPIA where personal information is shared'],
+    'template',
   ),
   k(
     'service-agreement',
@@ -765,6 +775,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records the terms on which services are supplied.',
     'Contracting parties',
     ['Common law of contract', 'Consumer Protection Act 68 of 2008 where it applies'],
+    'template',
   ),
   k(
     'shareholders-agreement',
@@ -773,6 +784,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     "Regulates the shareholders' relationship, consistent with the company's MOI.",
     'Shareholders',
     ['Companies Act 71 of 2008 s 15(7) (consistency with the MOI)'],
+    'template',
   ),
   k(
     'company-resolution',
@@ -781,6 +793,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records a decision of the board or the shareholders.',
     'Company',
     ['Companies Act 71 of 2008 ss 60, 65, 73, 74'],
+    'template',
   ),
   k(
     'cession',
@@ -789,6 +802,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Transfers a right (e.g. book debts) from cedent to cessionary, outright or as security.',
     'Cedent and cessionary',
     ['Common law of cession'],
+    'template',
   ),
 
   // ------------------------------------------------------------ practice
@@ -799,6 +813,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records an attendance, call or instruction on the file, with the time spent.',
     'Internal',
     ['LPC Code of Conduct (record keeping)'],
+    'template',
   ),
   k(
     'statement-of-account',
@@ -807,6 +822,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Shows the client fees, disbursements, payments and the balance.',
     'Attorney to client',
     ['Legal Practice Act s 35', 'LPC rules on accounting'],
+    'template',
   ),
 ];
 
