@@ -15,6 +15,26 @@ Research notes behind the drafting module (roadmap 15a). The catalogue (`package
 | Affidavit: oath or affirmation; signed in the commissioner's presence; the commissioner's certificate; no commissioner with an interest | GN R1258 of 21 July 1972, regs 1–4 and 7(1) (draft 2026 regulations for virtual commissioning are out for comment) | Standard certificate block; checks note reg 3(1) and 7(1) |
 | Amounts in words and figures | Practice; Deeds Registries Regulation 29 for property extents | Amounts are always written as "R12 500.00 (twelve thousand five hundred rand)" from a single value, so the words and figures can't disagree |
 
+## House style (decided 17 November 2026)
+
+The owner left the house style to the project; these defaults apply to every standard template until a firm sets its own (firm variants, later):
+
+| Kind | Font | Spacing | Margins | Other |
+|---|---|---|---|---|
+| Court documents | Arial 12 pt | 1.5 | 25 mm, 35 mm left for binding | Numbered paragraphs, page numbers, court heading |
+| Letters | Arial 11 pt | 1.15 | 25 mm | Firm letterhead, numbered paragraphs, page numbers |
+| Agreements, wills, deeds and notices | Arial 11 pt | 1.3 | 25 mm | Numbered clauses, page numbers |
+
+Why: 12 pt with 1.5 spacing on A4 is what the Uniform Rules (rule 62) and the Magistrates' Courts Rules (rule 63) ask for in substance (legible, A4, one side) and what divisional directives expect for papers and heads; the wider left margin leaves room to bind and paginate the court file. Letters and agreements are not filed, so 11 pt keeps them shorter without losing legibility. Arial (Helvetica in PDFs, which has the same metrics) reads well on screen and in CaseLines. Amounts are written in figures and words from one value, and dates are written out.
+
+## Review of the standard wording
+
+Dumisani Lukhele (admitted attorney) reviews every template. He records his decisions in the **Drafting templates: review tracker** Sheet (claude.ai artifact, one row per template, with a "How to review" tab), testing each template in the app on a test matter with a fictitious client.
+
+- **Approved:** the template's `review` becomes `{ status: 'reviewed', by: 'Dumisani Lukhele', on: <date> }`.
+- **Changes requested:** the wording or checks are changed as he specifies, the `version` is raised, the new version is written in the tracker's *Applied in version* column and the row is set to *Changes applied* for him to re-check.
+- A later change to an approved template's wording goes back to him before release.
+
 ## Statutory rules built into the checks
 
 | Template | Check | Source |
