@@ -76,7 +76,11 @@ describe('every template', () => {
       const pdf = await renderPdf(model, template.format);
       expect(pdf.subarray(0, 5).toString('latin1'), template.id).toBe('%PDF-');
       expect(template.basis.length, template.id).toBeGreaterThan(0);
-      expect(template.review.status).toBe('unreviewed');
+      expect(template.review).toMatchObject(
+        template.id === 'legal-memo'
+          ? { status: 'unreviewed' }
+          : { status: 'reviewed', by: 'Dumisani Lukhele', on: '2026-11-17' },
+      );
     }
   });
 
@@ -712,7 +716,8 @@ describe('drafts on a matter', () => {
     ).toBe(403);
     const blocked = await request(app)
       .post(`/api/cases/${caseId}/drafts/${draftId}/finalise`)
-      .set(attorney.auth);
+      .set(attorney.auth)
+      .send({ checked: true });
     expect(blocked.status).toBe(422);
 
     const current = (
@@ -744,9 +749,16 @@ describe('drafts on a matter', () => {
       .post(`/api/cases/${caseId}/drafts/${draftId}/submit`)
       .set(secretary.auth)
       .expect(200);
-    const final = await request(app)
+    // The finalising attorney must confirm they checked the document for this matter.
+    const unchecked = await request(app)
       .post(`/api/cases/${caseId}/drafts/${draftId}/finalise`)
       .set(attorney.auth);
+    expect(unchecked.status).toBe(400);
+    expect(JSON.stringify(unchecked.body)).toMatch(/grammar, wording and every input/);
+    const final = await request(app)
+      .post(`/api/cases/${caseId}/drafts/${draftId}/finalise`)
+      .set(attorney.auth)
+      .send({ checked: true });
     expect(final.status, JSON.stringify(final.body)).toBe(200);
     expect(final.body).toMatchObject({ status: 'final' });
     expect(final.body.documentId).toBeTruthy();

@@ -8,7 +8,7 @@ import { addCourtDays, isBusinessDay, longDate } from '../days';
 import type { Block } from '../model';
 import {
   COURT_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   lines,
   or,
   v,
@@ -174,7 +174,7 @@ export const exParteNoticeOfMotion: DraftTemplate = {
     'Uniform Rule 6(4) and Form 2 of the First Schedule',
     'Duty of utmost good faith on ex parte applications (Schlesinger v Schlesinger 1979 (4) SA 342 (W))',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { hearingTime: '10:00' },
   sections: [
@@ -279,7 +279,7 @@ export const urgentApplication: DraftTemplate = {
     'Uniform Rule 6(12)(a), (b)',
     'Divisional practice directives on the urgent court (set-down days, times and papers)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { hearingTime: '10:00' },
   sections: [
@@ -423,7 +423,7 @@ export const exception: DraftTemplate = {
   purpose:
     'Objects that a pleading is vague and embarrassing, or lacks the averments needed to sustain a claim or defence.',
   basis: ['Uniform Rule 23(1)', 'Uniform Rule 23(1)(a) (notice to remove the cause of complaint)'],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { proceedings: 'Action', ourRole: 'Defendant', pleading: 'particulars of claim' },
   sections: [
@@ -511,7 +511,7 @@ export const rule30Notice: DraftTemplate = {
   purpose:
     'Gives the other side 10 days to remove the cause of complaint about an irregular step, before an application to set it aside.',
   basis: ['Uniform Rule 30(1), (2)'],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     partiesSection(),
@@ -581,7 +581,7 @@ export const discoveryAffidavit: DraftTemplate = {
   purpose:
     'Lists, on oath, the documents relevant to the action that the party has, privileged documents and why, and documents it no longer has.',
   basis: ['Uniform Rule 35(1), (2) and Form 11 of the First Schedule', 'GN R1258 of 1972'],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { proceedings: 'Action', oath: 'Oath' },
   sections: [
@@ -699,7 +699,7 @@ export const preTrialMinute: DraftTemplate = {
     'Uniform Rule 37(6)',
     'Divisional practice directives (judicial case management, trial certification)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { proceedings: 'Action' },
   sections: [
@@ -825,7 +825,7 @@ export const preTrialMinute: DraftTemplate = {
 // ------------------------------------------------------------ heads of argument
 
 /** Looks like a case citation: a law report, a neutral citation or a court abbreviation. */
-const CITATION =
+export const CITATION =
   /(\(\d{4}\)|\[\d{4}\]|\d{4} \(\d+\) SA|\bZA[A-Z]{2,5}\b|\((SCA|CC|A|W|T|C|N|D|E|GP|GJ|WCC|KZP|KZD|ECG|LC|LAC)\))/;
 
 export const headsOfArgument: DraftTemplate = {
@@ -839,7 +839,7 @@ export const headsOfArgument: DraftTemplate = {
     'Divisional practice directives (form, length, filing times, CaseLines)',
     'SCA Rules (where the appeal is to the SCA)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     partiesSection(),
@@ -941,7 +941,7 @@ export const practiceNote: DraftTemplate = {
   purpose:
     'Summarises the matter for the judge: parties, nature, issues, relief, duration and urgency, with references to the papers.',
   basis: ['Divisional practice directives'],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     partiesSection(),
@@ -1026,7 +1026,7 @@ export const draftOrder: DraftTemplate = {
     'Divisional practice directives',
     'Uniform Rule 67A (costs; counsel’s fees on scale A, B or C)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     partiesSection({ withRole: false }),
@@ -1136,7 +1136,7 @@ export const indexAndPagination: DraftTemplate = {
     'Gauteng Consolidated Practice Directive 1 of 2024 para 7 (CaseLines)',
     'Uniform Rule 62',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { firstPage: '1' },
   sections: [
@@ -1220,7 +1220,7 @@ export const noticeOfSetDown: DraftTemplate = {
     'Uniform Rule 39 (trials)',
     'Divisional practice directives',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { time: '10:00' },
   sections: [
@@ -1290,7 +1290,7 @@ export const leaveToAppeal: DraftTemplate = {
     'Superior Courts Act 10 of 2013 s 17(1) (reasonable prospect of success, or another compelling reason)',
     'Uniform Rule 49(1) (within 15 days of the order or reasons)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     partiesSection(),
@@ -1399,7 +1399,7 @@ export const settlementAgreementOrder: DraftTemplate = {
     'Common law of compromise (transactio)',
     'Eke v Parsons 2016 (3) SA 37 (CC) (when a settlement may be made an order of court)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { costs: 'Each party pays its own costs' },
   sections: [

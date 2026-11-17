@@ -37,6 +37,8 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // The finalising attorney confirms they checked this document for the matter.
+  const [checked, setChecked] = useState(false);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -85,6 +87,7 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
     [catalogue, open],
   );
   const kind = catalogue?.kinds.find((item) => item.id === kindId) ?? null;
+  const kindTemplate = catalogue?.templates.find((item) => item.id === kindId) ?? null;
   const byCategory = useMemo(() => {
     const groups = new Map<DraftingCategory, DraftingCatalogue['kinds']>();
     for (const item of catalogue?.kinds ?? []) {
@@ -115,7 +118,11 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
       if (dirty) {
         await api.put(`/cases/${caseId}/drafts/${open.id}`, { values });
       }
-      const { data } = await api.post<Draft>(`/cases/${caseId}/drafts/${open.id}/${path}`);
+      const { data } = await api.post<Draft>(
+        `/cases/${caseId}/drafts/${open.id}/${path}`,
+        path === 'finalise' ? { checked: true } : {},
+      );
+      setChecked(false);
       show(data);
       await loadDrafts();
     });
@@ -237,6 +244,18 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
           <p className="field-hint">
             <strong>Legal basis:</strong> {kind.basis.join('; ')}
           </p>
+          {kindTemplate?.review.status === 'reviewed' ? (
+            <p className="field-hint">
+              <strong>Standard wording approved</strong> by {kindTemplate.review.by}
+              {kindTemplate.review.on ? ` on ${kindTemplate.review.on}` : ''}. The drafting attorney
+              checks grammar, wording and inputs for each matter.
+            </p>
+          ) : kindTemplate ? (
+            <p className="field-hint">
+              The standard wording of this template has not yet been reviewed by an admitted
+              attorney.
+            </p>
+          ) : null}
           {kind.availability !== 'template' ? (
             <p className="field-hint">
               The standard template for this document has not been written yet. It is listed so you
@@ -334,11 +353,27 @@ function DraftingPanel({ caseId, currentUser }: DraftingPanelProps) {
                 </button>
               ) : null}
               {open.status === 'review' && canApprove ? (
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => setChecked(event.target.checked)}
+                  />
+                  I have checked the grammar, wording and every input for this matter.
+                </label>
+              ) : null}
+              {open.status === 'review' && canApprove ? (
                 <button
                   type="button"
                   className="primary-button"
-                  disabled={busy || must > 0 || dirty}
-                  title={must ? 'Fix the “must fix” items first' : undefined}
+                  disabled={busy || must > 0 || dirty || !checked}
+                  title={
+                    must
+                      ? 'Fix the “must fix” items first'
+                      : !checked
+                        ? 'Confirm that you have checked the document first'
+                        : undefined
+                  }
                   onClick={() => act('finalise')}
                 >
                   Finalise to matter

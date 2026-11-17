@@ -4,7 +4,7 @@ import type { DraftIssue } from '@ahava88/shared';
 import { addBusinessDays, addMonths, longDate, parseDate } from '../days';
 import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
-import { LETTER_FORMAT, UNREVIEWED, letterhead, or, v, type DraftTemplate } from '../template';
+import { LETTER_FORMAT, APPROVED, letterhead, or, v, type DraftTemplate } from '../template';
 
 export const sender = [
   { key: 'authorName', label: 'Signed by', type: 'text' as const, required: true },
@@ -58,7 +58,7 @@ export const letterOfDemand: DraftTemplate = {
     'Common law (demand and mora)',
     'Prescription Act 68 of 1969 ss 11, 14, 15 (time limits)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   defaults: { deadlineDays: '14', deliveryMethod: 'Email and registered post' },
   sections: [
@@ -243,7 +243,7 @@ export const ncaS129Notice: DraftTemplate = {
     'Sebola v Standard Bank of South Africa Ltd [2012] ZACC 11',
     'Kubyana v Standard Bank of South Africa Ltd [2014] ZACC 1',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   defaults: { deliveryMethod: 'Registered post' },
   sections: [
@@ -391,7 +391,7 @@ export const organOfStateNotice: DraftTemplate = {
   basis: [
     'Institution of Legal Proceedings against certain Organs of State Act 40 of 2002 s 3 (notice within six months), s 4 (service), s 5(2) (30 days before process is served)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   defaults: { serviceMethod: 'By hand' },
   sections: [

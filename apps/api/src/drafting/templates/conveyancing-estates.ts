@@ -10,7 +10,7 @@ import type { Block } from '../model';
 import {
   AGREEMENT_FORMAT,
   LETTER_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   letterhead,
   lines,
   or,
@@ -129,7 +129,7 @@ export const commercialLease: DraftTemplate = {
     'Formalities in respect of Leases of Land Act 18 of 1969 s 1 (leases of ten years or more bind creditors and successors beyond ten years only if registered)',
     'Consumer Protection Act 68 of 2008 (where the tenant is a consumer, including small juristic persons below the threshold)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { escalation: '8', vat: 'Yes' },
   sections: [
@@ -306,7 +306,7 @@ export const deedOfTransfer: DraftTemplate = {
     'Deeds Registries Act 47 of 1937 ss 15, 15A, 20',
     'Deeds Registries Regulations, regs 26, 29 (extent in words and figures), 43 (preparation certificate), and the prescribed form',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -449,7 +449,7 @@ export const mortgageBond: DraftTemplate = {
     'Deeds Registries Regulations, reg 43',
     'National Credit Act 34 of 2005 (mortgage agreements with natural persons)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -570,7 +570,7 @@ export const notarialDeedServitude: DraftTemplate = {
     'Deeds Registries Act 47 of 1937 s 65 (registration of servitudes by notarial deed)',
     'Land Survey Act 8 of 1997 (diagram of the servitude area where it is defined)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { kind: 'Praedial (in favour of another property)' },
   sections: [
@@ -710,7 +710,7 @@ export const codicil: DraftTemplate = {
     'Wills Act 7 of 1953 s 2(1)(a) (signature, two competent witnesses present together, each page signed)',
     'Wills Act s 4A (a witness who benefits is disqualified)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -825,7 +825,7 @@ export const estateReporting: DraftTemplate = {
     'Administration of Estates Act 66 of 1965 s 7 (report within 14 days of death), s 9 (inventory), s 18(3) (smaller estates: letter of authority)',
     'Master’s prescribed forms: death notice (J294), inventory (J243), next-of-kin affidavit (J192), acceptance of trust (J190)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   sections: [
     { key: 'letter', title: 'Letter', fields: letterFields },
@@ -952,7 +952,7 @@ export const liquidationAccount: DraftTemplate = {
     'Administration of Estates Act 66 of 1965 s 35 (lodging within six months of letters of executorship; inspection after advertisement)',
     'Regulations under the Act, reg 8 (executor’s remuneration: at most 3.5% of gross assets and 6% of income)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {

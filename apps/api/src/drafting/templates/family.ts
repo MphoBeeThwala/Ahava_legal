@@ -8,7 +8,7 @@ import type { Block } from '../model';
 import {
   AGREEMENT_FORMAT,
   COURT_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   lines,
   or,
   v,
@@ -92,7 +92,7 @@ export const divorceSummons: DraftTemplate = {
     'Divorce Act s 2(1) (jurisdiction: domicile, or ordinary residence for one year)',
     'Uniform Rule 17; Magistrates’ Courts Rules (Regional Court)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { defendDays: '10', regime: 'In community of property' },
   sections: [
@@ -296,7 +296,7 @@ export const divorceSettlement: DraftTemplate = {
     'Pension Funds Act 24 of 1956 s 37D(4) (payment of the non-member spouse’s share)',
     'Children’s Act 38 of 2005 ss 6, 7, 33, 34 (best interests; parenting plans)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { pension: 'No' },
   sections: [
@@ -526,7 +526,7 @@ export const parentingPlan: DraftTemplate = {
     'Children’s Act 38 of 2005 s 33 (contents; assistance in preparing it), s 34 (formalities, registration with the Family Advocate or court order)',
     'Children’s Act ss 6, 7 (best interests), 10 and 31 (the child’s views), 30 (co-holders)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -685,7 +685,7 @@ export const antenuptialContract: DraftTemplate = {
     'Matrimonial Property Act 88 of 1984 ss 2–6 (accrual; declaration of commencement values), s 21 (changes after marriage need a court order)',
     'Deeds Registries Act 47 of 1937 s 87 (registration within three months of execution)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { accrual: 'With accrual' },
   sections: [
@@ -863,7 +863,7 @@ export const maintenanceComplaint: DraftTemplate = {
     'Maintenance Act 99 of 1998 s 6 (complaint), s 15 (duty of support)',
     'Maintenance Act regulations (prescribed complaint form)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {

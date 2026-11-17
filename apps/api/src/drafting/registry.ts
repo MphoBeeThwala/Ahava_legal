@@ -12,6 +12,7 @@ import {
   statementOfAccount,
   reportingLetter,
   billOfCosts,
+  legalMemo,
 } from './templates/commercial-practice';
 import {
   commercialLease,
@@ -166,6 +167,7 @@ export const TEMPLATES: readonly DraftTemplate[] = [
   statementOfAccount,
   reportingLetter,
   billOfCosts,
+  legalMemo,
 ];
 
 export function findTemplate(id: string): DraftTemplate | undefined {

@@ -4,15 +4,7 @@ import type { DraftIssue } from '@ahava88/shared';
 import { addBusinessDays, longDate, parseDate } from '../days';
 import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
-import {
-  LETTER_FORMAT,
-  UNREVIEWED,
-  letterhead,
-  lines,
-  or,
-  v,
-  type DraftTemplate,
-} from '../template';
+import { LETTER_FORMAT, APPROVED, letterhead, lines, or, v, type DraftTemplate } from '../template';
 import { letterFields, sender, signOff } from './correspondence';
 
 type Values = Record<string, string>;
@@ -57,7 +49,7 @@ export const withoutPrejudiceOffer: DraftTemplate = {
     'Exception: an admission of insolvency is not protected (KLD Residential CC v Empire Earth Investments 17 (Pty) Ltd 2017 (6) SA 55 (SCA))',
     'Uniform Rule 34 (formal offers to settle once proceedings have begun)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   defaults: { openDays: '14', side: 'Pay' },
   sections: [
@@ -181,7 +173,7 @@ export const noticeOfBreach: DraftTemplate = {
     'Common law: cancellation for material breach; mora and notice making time of the essence',
     'Consumer Protection Act 68 of 2008 s 14(2)(b)(ii) (20 business days to remedy, fixed-term consumer agreements)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   defaults: { remedyDays: '7', consumer: 'No', onFailure: 'Cancel the agreement' },
   sections: [

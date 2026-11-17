@@ -8,7 +8,7 @@ import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
 import {
   COURT_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   lines,
   or,
   v,
@@ -137,7 +137,7 @@ export const foundingAffidavit: DraftTemplate = {
     'Regulations under the Justices of the Peace and Commissioners of Oaths Act 16 of 1963 (GN R1258 of 1972)',
     'Ganes v Telecom Namibia Ltd 2004 (3) SA 615 (SCA) (authority is for the proceedings, not the deponent)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath', capacity: 'The applicant personally', urgent: 'No' },
   sections: [
@@ -373,7 +373,7 @@ export const confirmatoryAffidavit: DraftTemplate = {
     'Regulations under the Justices of the Peace and Commissioners of Oaths Act 16 of 1963 (GN R1258 of 1972)',
     'Law of Evidence Amendment Act 45 of 1988 s 3 (hearsay)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath', mainAffidavit: 'founding affidavit' },
   sections: [
@@ -501,7 +501,7 @@ export const combinedSummons: DraftTemplate = {
     'Uniform Rule 19 (notice of intention to defend)',
     'Uniform Rule 41A (mediation notice served with the summons)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { defendDays: '10', contract: 'No contract', claimType: 'Liquidated amount' },
   sections: [
@@ -798,7 +798,7 @@ export const noticeOfIntentionToDefend: DraftTemplate = {
     'Uniform Rule 19(3) (address for service, email)',
     'Uniform Rule 19(5) (late notice before default judgment)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { defendDays: '10' },
   sections: [
@@ -943,7 +943,7 @@ export const plea: DraftTemplate = {
     'Uniform Rule 22(3) (allegations not dealt with are deemed admitted)',
     'Uniform Rule 18 (rules for all pleadings)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   sections: [
     {

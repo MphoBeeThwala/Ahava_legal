@@ -10,6 +10,7 @@ import {
   AGREEMENT_FORMAT,
   COURT_FORMAT,
   LETTER_FORMAT,
+  APPROVED,
   UNREVIEWED,
   letterhead,
   lines,
@@ -18,6 +19,7 @@ import {
   type DraftTemplate,
 } from '../template';
 import { courtFields, courtHeading } from './court';
+import { CITATION } from './high-court';
 import { letterFields, sender, signOff } from './correspondence';
 import { attorneysBlock, attorneysFields } from './litigation';
 
@@ -92,7 +94,7 @@ export const nda: DraftTemplate = {
     'Common law of contract and of unlawful competition',
     'Protection of Personal Information Act 4 of 2013 ss 19–21 (where personal information is shared)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { mutual: 'Mutual', years: '3' },
   sections: [
@@ -227,7 +229,7 @@ export const serviceAgreement: DraftTemplate = {
     'Consumer Protection Act 68 of 2008 ss 14, 48–52 (where the client is a consumer)',
     'Protection of Personal Information Act 4 of 2013',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { consumer: 'No', paymentDays: '30', noticeDays: '30' },
   sections: [
@@ -382,7 +384,7 @@ export const shareholdersAgreement: DraftTemplate = {
     'Companies Act 71 of 2008 s 15(7) (consistent with the Act and the MOI; inconsistent terms are void)',
     'Companies Act s 15(2), (6) (the MOI binds the company and shareholders)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
@@ -556,7 +558,7 @@ export const companyResolution: DraftTemplate = {
     'Companies Act 71 of 2008 s 73 (board meetings), s 74 (written board resolutions)',
     's 60 (written shareholder resolutions: within 20 business days), s 65 (ordinary resolutions: more than 50%; special resolutions: at least 75%)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: {
     body: 'Board of directors',
@@ -711,7 +713,7 @@ export const cession: DraftTemplate = {
     'Common law of cession',
     'Grobler v Oosthuizen 2009 (5) SA 500 (SCA) (cession in securitatem debiti)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { kind: 'As security (in securitatem debiti)' },
   sections: [
@@ -838,7 +840,7 @@ export const fileNote: DraftTemplate = {
     'LPC Code of Conduct (keeping proper records)',
     'Legal Practice Act 28 of 2014 s 35 (fees supported by records)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { kind: 'Telephone call' },
   sections: [
@@ -945,7 +947,7 @@ export const statementOfAccount: DraftTemplate = {
     'Legal Practice Act 28 of 2014 ss 35, 86 (fees; trust money)',
     'LPC Rules (accounting); Value-Added Tax Act 89 of 1991 (15%)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { vatRate: '15' },
   sections: [
@@ -1086,7 +1088,7 @@ export const reportingLetter: DraftTemplate = {
     'LPC Code of Conduct (keeping the client informed)',
     'Legal Practice Act 28 of 2014 s 35(7) (cost estimates)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: LETTER_FORMAT,
   sections: [
     { key: 'letter', title: 'Letter', fields: letterFields },
@@ -1230,7 +1232,7 @@ export const billOfCosts: DraftTemplate = {
     'Uniform Rule 67A (scales A, B and C for counsel)',
     'Magistrates’ Courts Rules, rule 33 and tariff (lower courts)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { scale: 'Party and party', vatRate: '15' },
   sections: [
@@ -1327,6 +1329,158 @@ export const billOfCosts: DraftTemplate = {
       message:
         'Serve a notice of intention to tax with the bill and keep vouchers for every disbursement; charge only items the order and the tariff allow.',
       basis: 'Uniform Rule 70; Magistrates’ Courts Rules, rule 33',
+    });
+    return issues;
+  },
+};
+
+// ------------------------------------------------------------ legal memorandum
+
+export const legalMemo: DraftTemplate = {
+  id: 'legal-memo',
+  version: '2026.11-1',
+  name: 'Legal memorandum',
+  category: 'practice',
+  purpose:
+    'Sets out a legal question, the short answer, the facts relied on, the analysis with its authorities, and the recommendation, for a colleague, counsel or the client.',
+  basis: [
+    'Legal professional privilege (communications for the purpose of legal advice)',
+    'LPC Code of Conduct (competent, diligent advice)',
+  ],
+  review: UNREVIEWED,
+  format: AGREEMENT_FORMAT,
+  defaults: { privileged: 'Yes' },
+  sections: [
+    {
+      key: 'heading',
+      title: 'Memo heading',
+      fields: [
+        { key: 'to', label: 'To', type: 'text', required: true },
+        { key: 'from', label: 'From', type: 'text', required: true },
+        { key: 'memoDate', label: 'Date', type: 'date', required: true, prefill: 'today' },
+        { key: 'matter', label: 'Matter', type: 'text', required: true, prefill: 'matter.title' },
+        { key: 'reference', label: 'Reference', type: 'text', prefill: 'matter.caseNumber' },
+        {
+          key: 'privileged',
+          label: 'Privileged and confidential?',
+          type: 'choice',
+          required: true,
+          choices: ['Yes', 'No'],
+        },
+      ],
+    },
+    {
+      key: 'analysis',
+      title: 'Question and analysis',
+      fields: [
+        {
+          key: 'questions',
+          label: 'Question(s) presented, one per line',
+          type: 'longtext',
+          required: true,
+        },
+        { key: 'shortAnswer', label: 'Short answer', type: 'longtext', required: true },
+        {
+          key: 'facts',
+          label: 'Facts relied on, one paragraph per line',
+          type: 'longtext',
+          required: true,
+        },
+        {
+          key: 'discussion',
+          label: 'Discussion, one paragraph per line',
+          type: 'longtext',
+          required: true,
+        },
+        {
+          key: 'recommendation',
+          label: 'Recommendation and next steps, one per line',
+          type: 'longtext',
+          required: true,
+        },
+        {
+          key: 'authorities',
+          label: 'Authorities, one per line (full citations)',
+          type: 'longtext',
+          help: 'e.g. Wightman t/a JW Construction v Headfour (Pty) Ltd 2008 (3) SA 371 (SCA)',
+        },
+        { key: 'assumptions', label: 'Assumptions and limits of this advice', type: 'longtext' },
+      ],
+    },
+  ],
+  build(values) {
+    const blocks: Block[] = [
+      ...(v(values, 'privileged') === 'Yes'
+        ? [
+            {
+              kind: 'centred' as const,
+              text: 'PRIVILEGED AND CONFIDENTIAL: PREPARED FOR THE PURPOSE OF LEGAL ADVICE',
+              bold: true,
+            },
+          ]
+        : []),
+      { kind: 'text', text: `To: ${or(v(values, 'to'), 'recipient')}` },
+      { kind: 'text', text: `From: ${or(v(values, 'from'), 'author')}` },
+      { kind: 'text', text: `Date: ${longDate(v(values, 'memoDate')) || '[date]'}` },
+      {
+        kind: 'text',
+        text: `Matter: ${or(v(values, 'matter'), 'matter')}${v(values, 'reference') ? ` (${v(values, 'reference')})` : ''}`,
+      },
+      { kind: 'heading', text: 'Question presented' },
+      ...paraLines(values, 'questions'),
+      { kind: 'heading', text: 'Short answer' },
+      { kind: 'para', text: or(v(values, 'shortAnswer'), 'short answer') },
+      { kind: 'heading', text: 'Facts' },
+      ...paraLines(values, 'facts'),
+      { kind: 'heading', text: 'Discussion' },
+      ...paraLines(values, 'discussion'),
+      { kind: 'heading', text: 'Recommendation' },
+      ...paraLines(values, 'recommendation'),
+      ...(v(values, 'assumptions')
+        ? [
+            { kind: 'heading' as const, text: 'Assumptions and limits' },
+            { kind: 'para' as const, text: v(values, 'assumptions') },
+          ]
+        : []),
+      ...(lines(values, 'authorities').length
+        ? [
+            { kind: 'heading' as const, text: 'Authorities' },
+            ...lines(values, 'authorities').map((text, index) => ({
+              kind: 'text' as const,
+              text: `${index + 1}. ${text}`,
+            })),
+          ]
+        : []),
+      { kind: 'signature', lines: [or(v(values, 'from'), 'author')] },
+    ];
+    return { title: 'Memorandum', blocks };
+  },
+  checks(values) {
+    const issues: DraftIssue[] = [];
+    const uncited = lines(values, 'authorities').filter(
+      (line) => !CITATION.test(line) && !/\bAct\b|\bRule/i.test(line),
+    );
+    if (uncited.length) {
+      issues.push({
+        severity: 'should',
+        field: 'authorities',
+        message: `Give a full citation for: ${uncited.slice(0, 3).join('; ')}${uncited.length > 3 ? ' …' : ''}. Check every authority against the report itself.`,
+      });
+    }
+    if (
+      /\[\d{4}\] ZA|\d{4} \(\d+\) SA/.test(v(values, 'discussion')) &&
+      !lines(values, 'authorities').length
+    ) {
+      issues.push({
+        severity: 'should',
+        field: 'authorities',
+        message: 'The discussion cites cases: list them under Authorities with full citations.',
+      });
+    }
+    issues.push({
+      severity: 'note',
+      message:
+        'Where research came from the AI research brief, rely only on the sources it cited and that you have read; mark anything still to be verified.',
     });
     return issues;
   },

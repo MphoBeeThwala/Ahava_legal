@@ -5,7 +5,7 @@ import type { DraftIssue } from '@ahava88/shared';
 import { longDate } from '../days';
 import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
-import { AGREEMENT_FORMAT, UNREVIEWED, or, v, type DraftTemplate } from '../template';
+import { AGREEMENT_FORMAT, APPROVED, or, v, type DraftTemplate } from '../template';
 
 type Values = Record<string, string>;
 
@@ -51,7 +51,7 @@ export const acknowledgmentOfDebt: DraftTemplate = {
     'Magistrates’ Courts Act 32 of 1944 s 58 (consent to judgment), as amended by Act 7 of 2017',
     'National Credit Act 34 of 2005 (where repayment is deferred against interest or fees)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { repayment: 'Monthly instalments', debtorType: 'Natural person', consent: 'No' },
   sections: [
@@ -269,7 +269,7 @@ export const suretyship: DraftTemplate = {
     'Matrimonial Property Act 88 of 1984 s 15(2)(h), (5) (spouse’s written consent for each suretyship)',
     'National Credit Act 34 of 2005 ss 4(2)(c), 8(5) (credit guarantees)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { scope: 'All debts, present and future', coPrincipal: 'Yes' },
   sections: [
@@ -464,7 +464,7 @@ export const contingencyFeesAgreement: DraftTemplate = {
     'Contingency Fees Act ss 3 (writing, prescribed form, signed; 14-day cooling-off), 4 (settlement with the client’s consent, affidavit), 5 (review)',
     'Legal Practice Act 28 of 2014 s 35',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { money: 'Yes', upliftPercent: '100', capPercent: '25' },
   sections: [

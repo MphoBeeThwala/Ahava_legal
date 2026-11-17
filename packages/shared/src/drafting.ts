@@ -807,6 +807,15 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
 
   // ------------------------------------------------------------ practice
   k(
+    'legal-memo',
+    'practice',
+    'Legal memorandum',
+    'Sets out a legal question, the short answer, the facts, the analysis with authorities, and the recommendation.',
+    'Internal, counsel or client',
+    ['Legal professional privilege', 'LPC Code of Conduct'],
+    'template',
+  ),
+  k(
     'file-note',
     'practice',
     'File and attendance note',

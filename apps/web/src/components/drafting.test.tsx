@@ -44,7 +44,7 @@ const catalogue: DraftingCatalogue = {
       category: 'correspondence',
       purpose: 'Demands payment.',
       basis: ['Common law'],
-      review: { status: 'unreviewed' },
+      review: { status: 'reviewed', by: 'Dumisani Lukhele', on: '2026-11-17' },
       format: {
         paper: 'A4',
         fontSizePt: 11,
@@ -121,6 +121,20 @@ test('shows the checks; an attorney cannot finalise while a "must fix" item rema
     'href',
     '/api/cases/c1/drafts/d1/file?format=docx',
   );
+});
+
+test('the attorney confirms they checked the document before finalising', async () => {
+  mockGet([{ ...draft, issues: [] }]);
+  render(<DraftingPanel caseId="c1" currentUser={user('attorney')} />);
+  fireEvent.click(await screen.findByRole('button', { name: /Letter of demand/ }));
+  const finalise = await screen.findByRole('button', { name: 'Finalise to matter' });
+  expect(finalise).toBeDisabled();
+  fireEvent.click(
+    screen.getByRole('checkbox', {
+      name: 'I have checked the grammar, wording and every input for this matter.',
+    }),
+  );
+  expect(finalise).toBeEnabled();
 });
 
 test('a paralegal sees that an attorney finalises', async () => {

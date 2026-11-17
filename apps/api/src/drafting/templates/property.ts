@@ -5,7 +5,7 @@ import type { DraftField, DraftIssue } from '@ahava88/shared';
 import { longDate, parseDate } from '../days';
 import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
-import { AGREEMENT_FORMAT, UNREVIEWED, lines, or, v, type DraftTemplate } from '../template';
+import { AGREEMENT_FORMAT, APPROVED, lines, or, v, type DraftTemplate } from '../template';
 
 type Values = Record<string, string>;
 
@@ -130,7 +130,7 @@ export const residentialLease: DraftTemplate = {
     'Consumer Protection Act 68 of 2008 s 14 and reg 5 (fixed-term agreements, where the landlord lets in the ordinary course of business)',
     'Property Practitioners Act 22 of 2019 s 70 (mandatory disclosure form, where an agent is involved)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { cpa: 'Yes', dueDay: '1', escalation: '8', noticeMonths: '1' },
   sections: [
@@ -397,7 +397,7 @@ export const deedOfSale: DraftTemplate = {
     'Electrical Installation Regulations, 2009 reg 7 (electrical certificate of compliance)',
     'Property Practitioners Act 22 of 2019 ss 67, 70 (mandatory disclosure form)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: {
     bond: 'No',
@@ -656,7 +656,7 @@ export const poaToPassTransfer: DraftTemplate = {
     'Deeds Registries Regulations (form of the power of attorney; reg 44A preparation)',
     'Matrimonial Property Act 88 of 1984 s 15(2)(a) (spouse’s consent)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     { key: 'seller', title: 'Seller (transferor)', fields: partyFields('seller', 'Seller', true) },

@@ -18,6 +18,7 @@ import type { Actor } from '../lib/actor';
 import { iso, isoOrNull } from '../lib/time';
 import { parse, uuidSchema } from '../validation/schemas';
 import { findTemplate, summary, TEMPLATES } from '../drafting/registry';
+import { longDate } from '../drafting/days';
 import { fieldIssues } from '../drafting/fields';
 import { renderDocx, renderPdf, renderText } from '../drafting/model';
 import type { DraftContext, DraftTemplate } from '../drafting/template';
@@ -126,6 +127,22 @@ async function prefill(template: DraftTemplate, matter: CaseRow, ctx: DraftConte
   return values;
 }
 
+/** Who approved the standard wording, and who answers for this document. */
+export function reviewNote(template: DraftTemplate): DraftIssue {
+  const { review } = template;
+  if (review.status === 'reviewed') {
+    return {
+      severity: 'note',
+      message: `Standard wording approved by ${review.by ?? 'the reviewing attorney'}${review.on ? ` on ${longDate(review.on)}` : ''}. The attorney drafting this document remains responsible for checking its grammar, its wording and every input against this matter before it is finalised.`,
+    };
+  }
+  return {
+    severity: 'note',
+    message:
+      'The standard wording of this template has not yet been reviewed by an admitted attorney: read the whole document before it is finalised.',
+  };
+}
+
 export function checkDraft(
   template: DraftTemplate,
   values: Record<string, string>,
@@ -134,13 +151,7 @@ export function checkDraft(
   const fields = template.sections.flatMap((section) => section.fields);
   const order = { must: 0, should: 1, note: 2 };
   const issues = [...fieldIssues(fields, values), ...template.checks(values, ctx)];
-  if (template.review.status === 'unreviewed') {
-    issues.push({
-      severity: 'note',
-      message:
-        'The standard wording of this template has not yet been reviewed by an admitted attorney: read the whole document before it is finalised.',
-    });
-  }
+  issues.push(reviewNote(template));
   return issues.sort((a, b) => order[a.severity] - order[b.severity]);
 }
 
@@ -280,11 +291,21 @@ export async function submitDraft(caseRef: string, draftId: string, actor: Actor
 }
 
 /** An attorney finalises: no "must fix" issues may remain. Saves the document to the matter. */
+/** The finalising attorney confirms they checked the document for this matter. */
+const finaliseSchema = z.object({
+  checked: z.literal(
+    true,
+    'Confirm that you have checked the grammar, wording and every input for this matter',
+  ),
+});
+
 export async function finaliseDraft(
   caseRef: string,
   draftId: string,
+  input: unknown,
   actor: Actor,
 ): Promise<Draft> {
+  parse(finaliseSchema, input ?? {});
   const { matter, row } = await requireDraft(caseRef, draftId);
   if (row.status !== 'review')
     throw httpError('Submit the draft for review before finalising it', 409);

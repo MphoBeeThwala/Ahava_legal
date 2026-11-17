@@ -16,7 +16,14 @@ import type {
   ReportSnapshot,
   UpcomingItem,
 } from '@ahava88/shared';
-import { ROLE_LABELS, STAFF_ROLES, hasPermission, type Permission } from '@ahava88/shared';
+import {
+  DRAFTING_CATALOGUE,
+  ROLE_LABELS,
+  STAFF_ROLES,
+  hasPermission,
+  type DraftingKind,
+  type Permission,
+} from '@ahava88/shared';
 import type { Notice } from './DismissibleNotice';
 import DismissibleNotice from './DismissibleNotice';
 import BillingPanel, { rand } from './BillingPanel';
@@ -465,6 +472,7 @@ function OperationsHub({
                 <option value="agreement">Agreement</option>
                 <option value="template">Template</option>
               </select>
+              <p className="field-hint">{templateHint(documentForm.documentType)}</p>
               <textarea
                 rows={4}
                 value={documentForm.body}
@@ -998,3 +1006,32 @@ function EmptyHint({ message, hint }: { message: string; hint?: string }) {
 }
 
 export default OperationsHub;
+
+/** Kinds of standard template that match each document type. */
+const TEMPLATE_GROUPS: Record<string, { label: string; match: (kind: DraftingKind) => boolean }> = {
+  correspondence: {
+    label: 'letters and notices',
+    match: (kind) => kind.category === 'correspondence',
+  },
+  pleading: {
+    label: 'pleadings, notices and affidavits',
+    match: (kind) => ['high_court', 'magistrates_court', 'affidavits'].includes(kind.category),
+  },
+  memo: { label: 'memoranda', match: (kind) => kind.id === 'legal-memo' },
+  agreement: {
+    label: 'agreements and deeds',
+    match: (kind) => ['commercial', 'property', 'engagement'].includes(kind.category),
+  },
+};
+
+/** Points staff to the standard templates for this type of document. */
+export function templateHint(documentType: string): string {
+  const group = TEMPLATE_GROUPS[documentType];
+  if (!group) {
+    return 'Save the firm’s own wording here; standard templates are under Cases → Draft a document.';
+  }
+  const count = DRAFTING_CATALOGUE.filter(
+    (kind) => kind.availability === 'template' && group.match(kind),
+  ).length;
+  return `There ${count === 1 ? 'is 1 standard template' : `are ${count} standard templates`} for ${group.label}: open the matter under Cases and choose Draft a document. They fill in from the matter and check the rules. Use this form for anything else.`;
+}

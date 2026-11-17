@@ -7,7 +7,7 @@ import type { Block } from '../model';
 import {
   AGREEMENT_FORMAT,
   COURT_FORMAT,
-  UNREVIEWED,
+  APPROVED,
   lines,
   or,
   v,
@@ -48,7 +48,7 @@ export const condonationApplication: DraftTemplate = {
     'Melane v Santam Insurance Co Ltd 1962 (4) SA 531 (A) (degree of lateness, explanation, prospects, importance, prejudice)',
     'GN R1258 of 1972',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { oath: 'Oath', forum: 'CCMA' },
   sections: [
@@ -207,7 +207,7 @@ export const labourCourtStatementOfClaim: DraftTemplate = {
     'Labour Court Rules (2024): referral by statement of claim',
     'Labour Relations Act 66 of 1995 s 191(5)(b) and (11) (within 90 days of the certificate)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: COURT_FORMAT,
   defaults: { responseDays: '10' },
   sections: [
@@ -343,7 +343,7 @@ export const disciplinaryNotice: DraftTemplate = {
     'Labour Relations Act 66 of 1995 s 188 (fair reason and fair procedure)',
     'Code of Good Practice: Dismissal (2023, replacing Schedule 8 to the LRA)',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   defaults: { stage: 'Notice of hearing' },
   sections: [
@@ -561,7 +561,7 @@ export const s189Notice: DraftTemplate = {
     'Basic Conditions of Employment Act 75 of 1997 s 41 (severance: at least one week’s pay per completed year of service)',
     'Code of Good Practice on Dismissal Based on Operational Requirements',
   ],
-  review: UNREVIEWED,
+  review: APPROVED,
   format: AGREEMENT_FORMAT,
   sections: [
     {
