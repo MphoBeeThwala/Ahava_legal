@@ -493,6 +493,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Explains a late referral: degree of lateness, reasons, prospects of success and prejudice.',
     'CCMA / Labour Court',
     ['CCMA Rules', 'Labour Court Rules 2024'],
+    'template',
   ),
   k(
     'labour-court-statement-of-claim',
@@ -501,6 +502,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Starts a referral for adjudication in the Labour Court.',
     'Labour Court',
     ['Labour Court Rules 2024, Form 1'],
+    'template',
   ),
   k(
     'disciplinary-notice',
@@ -509,6 +511,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Notifies an employee of allegations and a hearing, and records the outcome.',
     'Employer',
     ['Labour Relations Act Schedule 8 (Code of Good Practice: Dismissal)'],
+    'template',
   ),
   k(
     's189-notice',
@@ -517,6 +520,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Invites consultation on possible dismissals for operational requirements, with the prescribed disclosures.',
     'Employer',
     ['Labour Relations Act s 189(3)'],
+    'template',
   ),
   k(
     'employment-contract',
@@ -574,6 +578,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Starts divorce proceedings, with the relief claimed.',
     'High Court / Regional Court',
     ['Divorce Act 70 of 1979', 'Uniform Rule 17; Magistrates’ Courts Rules'],
+    'template',
   ),
   k(
     'divorce-settlement',
@@ -582,6 +587,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records the division of assets, maintenance and care arrangements, to be made an order of court.',
     'High Court / Regional Court',
     ['Divorce Act s 7', 'Children’s Act 38 of 2005 s 6 (best interests)'],
+    'template',
   ),
   k(
     'parenting-plan',
@@ -590,6 +596,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Sets out how co-holders of parental responsibilities will exercise them.',
     'Family Advocate / court',
     ['Children’s Act 38 of 2005 ss 33, 34'],
+    'template',
   ),
   k(
     'antenuptial-contract',
@@ -601,6 +608,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Matrimonial Property Act 88 of 1984',
       'Deeds Registries Act 47 of 1937 s 87 (registration within three months)',
     ],
+    'template',
   ),
   k(
     'maintenance-complaint',
@@ -609,6 +617,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Asks the maintenance court for a maintenance order.',
     'Maintenance court',
     ['Maintenance Act 99 of 1998 and its prescribed forms'],
+    'template',
   ),
 
   // ------------------------------------------------------------ property

@@ -477,6 +477,72 @@ describe('Magistrates’ Court and criminal batch', () => {
   });
 });
 
+describe('labour and family batch', () => {
+  const issuesFor = (id: string, values: Record<string, string>) =>
+    findTemplate(id)!.checks(values, CTX);
+  const must = (id: string, values: Record<string, string>) =>
+    issuesFor(id, values)
+      .filter((issue) => issue.severity === 'must')
+      .map((issue) => issue.field);
+  const text = (id: string, values: Record<string, string>) => {
+    const template = findTemplate(id)!;
+    return renderText(template.build({ ...template.defaults, ...values }, CTX), template.format);
+  };
+
+  test('labour: lateness, notice of hearing, outcome and retrenchment', () => {
+    expect(
+      text('condonation-application', { dueDate: '2026-11-01', filedDate: '2026-11-16' }),
+    ).toContain('15 days late');
+    expect(must('labour-court-statement-of-claim', { certificateDate: '2026-07-01' })).toContain(
+      'certificateDate',
+    );
+    expect(
+      issuesFor('disciplinary-notice', {
+        noticeDate: '2026-11-16',
+        hearingDate: '2026-11-17',
+      }).some((i) => i.field === 'hearingDate'),
+    ).toBe(true);
+    expect(
+      text('disciplinary-notice', {
+        stage: 'Outcome of hearing',
+        sanction: 'Dismissal',
+        findings: 'Guilty',
+      }),
+    ).toContain('within 30 days');
+    expect(must('s189-notice', { severanceWeeks: '0.5' })).toContain('severanceWeeks');
+    expect(
+      issuesFor('s189-notice', { employees: '120', affected: '6', previous: '5' }).some((i) =>
+        /large-scale/.test(i.message),
+      ),
+    ).toBe(true);
+    expect(
+      issuesFor('s189-notice', { employees: '40', affected: '30' }).some((i) =>
+        /large-scale/.test(i.message),
+      ),
+    ).toBe(false);
+  });
+
+  test('family: children, pensions, accrual and maintenance', () => {
+    const summons = text('divorce-summons', {
+      children: 'Lerato Dlamini | 2015-06-02',
+      regime: 'In community of property',
+    });
+    expect(summons).toContain('Lerato Dlamini, born on 2 June 2015');
+    expect(summons).toContain('Division of the joint estate.');
+    expect(must('divorce-settlement', { pension: 'Yes' })).toContain('pensionFund');
+    expect(
+      text('divorce-settlement', { pension: 'Yes', pensionFund: 'GEPF 123', pensionShare: '50%' }),
+    ).toContain('section 37D(4) of the Pension Funds Act');
+    expect(issuesFor('parenting-plan', {}).some((i) => i.field === 'childViews')).toBe(true);
+    expect(text('antenuptial-contract', { accrual: 'Without accrual' })).toContain(
+      'is expressly excluded',
+    );
+    expect(text('maintenance-complaint', { needs: 'Food | 2500\nSchool | 1500' })).toContain(
+      'Total monthly needs: R4 000.00',
+    );
+  });
+});
+
 describe('drafts on a matter', () => {
   let attorney: TestStaff;
   let secretary: TestStaff;
