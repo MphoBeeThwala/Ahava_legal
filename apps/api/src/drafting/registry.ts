@@ -3,6 +3,19 @@
 import type { DraftTemplateSummary } from '@ahava88/shared';
 import type { DraftTemplate } from './template';
 import {
+  divorceSummons,
+  divorceSettlement,
+  parentingPlan,
+  antenuptialContract,
+  maintenanceComplaint,
+} from './templates/family';
+import {
+  condonationApplication,
+  labourCourtStatementOfClaim,
+  disciplinaryNotice,
+  s189Notice,
+} from './templates/employment';
+import {
   mcSummons,
   mcApplication,
   mcPlea,
@@ -108,6 +121,15 @@ export const TEMPLATES: readonly DraftTemplate[] = [
   s112Statement,
   representationsToNpa,
   criminalAppealNotice,
+  condonationApplication,
+  labourCourtStatementOfClaim,
+  disciplinaryNotice,
+  s189Notice,
+  divorceSummons,
+  divorceSettlement,
+  parentingPlan,
+  antenuptialContract,
+  maintenanceComplaint,
 ];
 
 export function findTemplate(id: string): DraftTemplate | undefined {
