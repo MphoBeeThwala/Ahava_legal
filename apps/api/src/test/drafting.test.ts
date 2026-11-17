@@ -355,6 +355,81 @@ describe('third batch of templates', () => {
   });
 });
 
+describe('High Court batch', () => {
+  const issuesFor = (id: string, values: Record<string, string>) =>
+    findTemplate(id)!.checks(values, CTX);
+  const must = (id: string, values: Record<string, string>) =>
+    issuesFor(id, values)
+      .filter((issue) => issue.severity === 'must')
+      .map((issue) => issue.field);
+  const text = (id: string, values: Record<string, string>) => {
+    const template = findTemplate(id)!;
+    return renderText(template.build({ ...template.defaults, ...values }, CTX), template.format);
+  };
+
+  test('hearing dates must be court days, and urgent interim relief needs a return date', () => {
+    expect(must('ex-parte-notice-of-motion', { hearingDate: '2026-12-25' })).toContain(
+      'hearingDate',
+    );
+    expect(must('urgent-application', { hearingDate: '2026-11-24', interim: 'Yes' })).toEqual([
+      'returnDate',
+    ]);
+    expect(text('urgent-application', { prayers: 'Interdicting the respondent.' })).toContain(
+      'heard as one of urgency in terms of rule 6(12)',
+    );
+  });
+
+  test('exception, Rule 30 and leave to appeal time limits', () => {
+    expect(must('exception', { ground: 'is vague and embarrassing' })).toContain('noticeDate');
+    expect(
+      must('exception', { ground: 'is vague and embarrassing', noticeDate: '2026-11-10' }),
+    ).toContain('noticeDate');
+    expect(
+      must('exception', { ground: 'is vague and embarrassing', noticeDate: '2026-10-01' }),
+    ).toEqual([]);
+    expect(issuesFor('rule-30-notice', { awareOn: '2026-10-01' })[0]?.severity).toBe('should');
+    expect(must('leave-to-appeal', { judgmentDate: '2026-10-01' })).toContain('judgmentDate');
+    expect(
+      text('exception', { proceedings: 'Action', ourRole: 'Defendant', ground: GROUND }),
+    ).toContain('the defendant excepts to the plaintiff’s particulars of claim');
+  });
+
+  test('draft orders name the costs scale; heads list full citations; the index paginates', () => {
+    expect(
+      issuesFor('draft-order', { terms: 'The respondent pays the costs.' }).some((i) =>
+        /scale A, B or C/.test(i.message),
+      ),
+    ).toBe(true);
+    expect(
+      issuesFor('draft-order', {
+        terms: 'The respondent pays the costs, counsel on scale B.',
+      }).some((i) => /scale A, B or C/.test(i.message)),
+    ).toBe(false);
+    const heads = issuesFor('heads-of-argument', {
+      authorities: 'Plascon-Evans 1984 (3) SA 623 (A)\nSome case I remember',
+    });
+    expect(heads.find((i) => i.field === 'authorities')?.message).toMatch(/Some case I remember/);
+    const index = text('index-and-pagination', {
+      documents: 'Notice of motion | 2026-03-01 | 3\nFounding affidavit | 2026-03-01 | 20',
+    });
+    expect(index).toContain('pages 1–3');
+    expect(index).toContain('pages 4–23');
+  });
+
+  test('discovery: privilege needs a ground', () => {
+    expect(
+      issuesFor('discovery-affidavit', { partTwo: 'Letters to our attorney' }).some(
+        (i) => i.field === 'partTwo',
+      ),
+    ).toBe(true);
+    expect(text('discovery-affidavit', { partOne: 'Loan agreement' })).toContain(
+      'SCHEDULE: PART 1',
+    );
+  });
+});
+
+const GROUND = 'lacks averments necessary to sustain a cause of action';
+
 describe('drafts on a matter', () => {
   let attorney: TestStaff;
   let secretary: TestStaff;

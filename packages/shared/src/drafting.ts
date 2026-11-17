@@ -199,6 +199,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Starts an application where no other party is cited or notice is not required.',
     'High Court',
     ['Uniform Rule 6(4); Form 2'],
+    'template',
   ),
   k(
     'urgent-application',
@@ -207,6 +208,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Brings an application on truncated time limits, with the grounds of urgency set out explicitly.',
     'High Court',
     ['Uniform Rule 6(12)', 'Divisional urgent court directives'],
+    'template',
   ),
   k(
     'founding-affidavit',
@@ -281,6 +283,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Objects that a pleading is vague and embarrassing or discloses no cause of action or defence.',
     'High Court',
     ['Uniform Rule 23'],
+    'template',
   ),
   k(
     'rule-30-notice',
@@ -289,6 +292,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Gives notice to remove the cause of complaint about an irregular step.',
     'High Court',
     ['Uniform Rule 30'],
+    'template',
   ),
   k(
     'notice-of-bar',
@@ -306,6 +310,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Lists the documents a party has, with notices to discover, inspect and produce.',
     'High Court',
     ['Uniform Rule 35'],
+    'template',
   ),
   k(
     'rule-41a-notice',
@@ -323,6 +328,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records what was agreed and what remains in dispute before trial.',
     'High Court',
     ['Uniform Rule 37', 'Divisional practice directives'],
+    'template',
   ),
   k(
     'heads-of-argument',
@@ -331,6 +337,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Sets out the party’s argument concisely, with authorities.',
     'High Court',
     ['Divisional practice directives (format, filing times, CaseLines)'],
+    'template',
   ),
   k(
     'practice-note',
@@ -339,6 +346,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Summarises the parties, the issues, the duration and urgency for the judge.',
     'High Court',
     ['Divisional practice directives'],
+    'template',
   ),
   k(
     'draft-order',
@@ -347,6 +355,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'The order the party asks the court to make, ready to sign.',
     'High Court',
     ['Divisional practice directives'],
+    'template',
   ),
   k(
     'index-and-pagination',
@@ -358,6 +367,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Gauteng directive on indexing and pagination of bundles (2025)',
       'Consolidated Practice Directive 1 of 2024 para 7',
     ],
+    'template',
   ),
   k(
     'notice-of-set-down',
@@ -366,6 +376,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Gives notice of the date a matter is enrolled for hearing.',
     'High Court',
     ['Uniform Rules 6(5)(f), 39'],
+    'template',
   ),
   k(
     'leave-to-appeal',
@@ -374,6 +385,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Asks for leave to appeal, stating the grounds.',
     'High Court / SCA',
     ['Superior Courts Act 10 of 2013 s 17', 'Uniform Rule 49'],
+    'template',
   ),
   k(
     'settlement-agreement-order',
@@ -382,6 +394,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records a settlement and asks for it to be made an order of court.',
     'High Court',
     ['Common law; Eke v Parsons [2015] ZACC 30'],
+    'template',
   ),
 
   // ------------------------------------------------------------ Magistrates' Courts

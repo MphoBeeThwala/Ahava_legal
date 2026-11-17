@@ -25,7 +25,17 @@ const user = (role: UserRole): PublicUser =>
 
 const catalogue: DraftingCatalogue = {
   categories: DRAFTING_CATEGORIES,
-  kinds: [...DRAFTING_CATALOGUE],
+  // A planned kind, so the test holds once every real kind has a template.
+  kinds: [
+    ...DRAFTING_CATALOGUE,
+    {
+      ...DRAFTING_CATALOGUE[0]!,
+      id: 'test-planned',
+      name: 'Test planned document',
+      basis: ['Test basis rule 99'],
+      availability: 'planned',
+    },
+  ],
   templates: [
     {
       id: 'letter-of-demand',
@@ -88,11 +98,13 @@ test('every kind of document can be explored; only kinds with a template can be 
   const picker = await screen.findByLabelText('Document');
   await screen.findByRole('option', { name: 'Letter of demand' });
   expect(within(picker).getByRole('option', { name: 'Letter of demand' })).not.toBeDisabled();
-  const exception = within(picker).getByRole('option', { name: /Exception \(template coming\)/ });
-  expect(exception).not.toBeDisabled();
-  fireEvent.change(picker, { target: { value: 'exception' } });
+  const planned = within(picker).getByRole('option', {
+    name: /Test planned document \(template coming\)/,
+  });
+  expect(planned).not.toBeDisabled();
+  fireEvent.change(picker, { target: { value: 'test-planned' } });
   expect(screen.getByText('Template coming')).toBeInTheDocument();
-  expect(screen.getByText(/Uniform Rule 23/)).toBeInTheDocument();
+  expect(screen.getByText(/Test basis rule 99/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Start draft' })).toBeDisabled();
   fireEvent.change(picker, { target: { value: 'letter-of-demand' } });
   expect(screen.getByText('Ready to draft')).toBeInTheDocument();
