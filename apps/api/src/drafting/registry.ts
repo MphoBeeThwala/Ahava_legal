@@ -3,6 +3,17 @@
 import type { DraftTemplateSummary } from '@ahava88/shared';
 import type { DraftTemplate } from './template';
 import {
+  mcSummons,
+  mcApplication,
+  mcPlea,
+  section65Documents,
+  certificationOfCopies,
+  bailAffidavit,
+  s112Statement,
+  representationsToNpa,
+  criminalAppealNotice,
+} from './templates/lower-courts';
+import {
   exParteNoticeOfMotion,
   urgentApplication,
   exception,
@@ -88,6 +99,15 @@ export const TEMPLATES: readonly DraftTemplate[] = [
   noticeOfSetDown,
   leaveToAppeal,
   settlementAgreementOrder,
+  mcSummons,
+  mcApplication,
+  mcPlea,
+  section65Documents,
+  certificationOfCopies,
+  bailAffidavit,
+  s112Statement,
+  representationsToNpa,
+  criminalAppealNotice,
 ];
 
 export function findTemplate(id: string): DraftTemplate | undefined {

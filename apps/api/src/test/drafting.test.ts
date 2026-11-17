@@ -430,6 +430,53 @@ describe('High Court batch', () => {
 
 const GROUND = 'lacks averments necessary to sustain a cause of action';
 
+describe('Magistrates’ Court and criminal batch', () => {
+  const issuesFor = (id: string, values: Record<string, string>) =>
+    findTemplate(id)!.checks(values, CTX);
+  const must = (id: string, values: Record<string, string>) =>
+    issuesFor(id, values)
+      .filter((issue) => issue.severity === 'must')
+      .map((issue) => issue.field);
+  const text = (id: string, values: Record<string, string>) => {
+    const template = findTemplate(id)!;
+    return renderText(template.build({ ...template.defaults, ...values }, CTX), template.format);
+  };
+
+  test('civil: NCA allegations, opposition periods and the s 65A registered letter', () => {
+    expect(must('mc-summons', { credit: 'Yes', defendDays: '5' })).toEqual([
+      'defendDays',
+      's129Date',
+    ]);
+    expect(text('mc-summons', { credit: 'Yes', s129Date: '2026-09-01' })).toContain(
+      'sections 129 and 130 of the National Credit Act',
+    );
+    expect(must('mc-application', { opposeDays: '5' })).toContain('opposeDays');
+    expect(must('section-65-documents', { presence: 'No' })).toContain('letterDate');
+    expect(must('mc-plea', { paragraphCount: '3', responses: '1 to 2: Admitted.' })).toContain(
+      'responses',
+    );
+  });
+
+  test('criminal: Schedule 6 bail, s 112 fault and appeal time limits', () => {
+    expect(must('bail-affidavit', { schedule: 'Schedule 6' })).toContain('exceptional');
+    expect(text('bail-affidavit', { previous: 'none' })).toContain('section 60(11B)(a)');
+    expect(
+      issuesFor('s112-statement', { fault: 'I did it.' }).some((i) => i.field === 'fault'),
+    ).toBe(true);
+    expect(
+      issuesFor('s112-statement', { fault: 'I knew it was wrong and intended to take it.' }).some(
+        (i) => i.field === 'fault',
+      ),
+    ).toBe(false);
+    expect(must('criminal-appeal-notice', { sentenceDate: '2026-10-01' })).toContain(
+      'sentenceDate',
+    );
+    expect(must('criminal-appeal-notice', { sentenceDate: '2026-11-10' })).not.toContain(
+      'sentenceDate',
+    );
+  });
+});
+
 describe('drafts on a matter', () => {
   let attorney: TestStaff;
   let secretary: TestStaff;

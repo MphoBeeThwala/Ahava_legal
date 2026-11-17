@@ -405,6 +405,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     "Starts an action in the Magistrates' Court.",
     "Magistrates' Court",
     ["Magistrates' Courts Rules rule 5 and Annexure 1 forms", 'Rule 63 (filing, A4, one side)'],
+    'template',
   ),
   k(
     'mc-application',
@@ -413,6 +414,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Starts an application on affidavit.',
     "Magistrates' Court",
     ["Magistrates' Courts Rules rule 55"],
+    'template',
   ),
   k(
     'mc-plea',
@@ -421,6 +423,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Answers the summons and particulars of claim.',
     "Magistrates' Court",
     ["Magistrates' Courts Rules rule 17"],
+    'template',
   ),
   k(
     'section-65-documents',
@@ -429,6 +432,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Calls a judgment debtor to an enquiry into their financial position.',
     "Magistrates' Court",
     ["Magistrates' Courts Act 32 of 1944 s 65A"],
+    'template',
   ),
 
   // ------------------------------------------------------------ affidavits
@@ -460,6 +464,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Certifies a copy as a true copy of the original.',
     'Commissioner of oaths',
     ['Justices of the Peace and Commissioners of Oaths Act 16 of 1963'],
+    'template',
   ),
 
   // ------------------------------------------------------------ labour
@@ -531,6 +536,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Sets out the accused’s circumstances for bail, addressing the statutory factors.',
     'Criminal court',
     ['Criminal Procedure Act 51 of 1977 s 60'],
+    'template',
   ),
   k(
     's112-statement',
@@ -539,6 +545,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'A written statement setting out the facts the accused admits on a guilty plea.',
     'Criminal court',
     ['Criminal Procedure Act s 112(2)'],
+    'template',
   ),
   k(
     'representations-to-npa',
@@ -547,6 +554,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Asks the prosecution to withdraw or reduce charges, giving reasons.',
     'NPA',
     ['National Prosecuting Authority Act 32 of 1998', 'NPA prosecution policy'],
+    'template',
   ),
   k(
     'criminal-appeal-notice',
@@ -555,6 +563,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Appeals a conviction or sentence, stating the grounds.',
     'High Court',
     ['Criminal Procedure Act ss 309, 316'],
+    'template',
   ),
 
   // ------------------------------------------------------------ family
