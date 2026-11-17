@@ -102,6 +102,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Common law privilege for settlement negotiations',
       'Uniform Rule 34 (offers to settle in court)',
     ],
+    'template',
   ),
   k(
     'notice-of-breach',
@@ -114,6 +115,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
       'Common law (lex commissoria, mora)',
       'Consumer Protection Act 68 of 2008 s 14 (fixed-term consumer agreements)',
     ],
+    'template',
   ),
   k(
     'reporting-letter',
@@ -165,6 +167,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Authorises an agent to act generally for the principal; ends on the principal’s mental incapacity or death.',
     'Principal to agent',
     ['Common law of agency'],
+    'template',
   ),
   k(
     'bill-of-costs',
@@ -224,6 +227,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'The respondent’s answer to the founding affidavit, paragraph by paragraph.',
     'High Court',
     ['Uniform Rule 6(5)(d)(ii)'],
+    'template',
   ),
   k(
     'replying-affidavit',
@@ -232,6 +236,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'The applicant’s reply, confined to answering new matter.',
     'High Court',
     ['Uniform Rule 6(5)(e)'],
+    'template',
   ),
   k(
     'combined-summons',
@@ -249,6 +254,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Starts an action for a debt or liquidated demand.',
     'High Court',
     ['Uniform Rule 17(2)(b); Form 9'],
+    'template',
   ),
   k(
     'notice-of-intention-to-defend',
@@ -291,6 +297,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Calls on a party to deliver a pleading within five days or be barred.',
     'High Court',
     ['Uniform Rule 26'],
+    'template',
   ),
   k(
     'discovery-affidavit',
@@ -307,6 +314,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'States whether the party agrees to refer the dispute to mediation.',
     'High Court',
     ['Uniform Rule 41A'],
+    'template',
   ),
   k(
     'pre-trial-minute',
@@ -458,6 +466,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Asks for arbitration after conciliation fails.',
     'CCMA / bargaining council',
     ['Labour Relations Act s 191(5)', 'CCMA Rules'],
+    'template',
   ),
   k(
     'condonation-application',
@@ -498,6 +507,7 @@ export const DRAFTING_CATALOGUE: readonly DraftingKind[] = [
     'Records the terms of employment, including the particulars the BCEA requires.',
     'Employer and employee',
     ['Basic Conditions of Employment Act 75 of 1997 s 29'],
+    'template',
   ),
 
   // ------------------------------------------------------------ criminal

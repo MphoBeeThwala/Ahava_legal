@@ -256,6 +256,105 @@ describe('second batch of templates', () => {
   });
 });
 
+describe('third batch of templates', () => {
+  const issuesFor = (id: string, values: Record<string, string>) =>
+    findTemplate(id)!.checks(values, CTX);
+  const must = (id: string, values: Record<string, string>) =>
+    issuesFor(id, values)
+      .filter((issue) => issue.severity === 'must')
+      .map((issue) => issue.field);
+  const text = (id: string, values: Record<string, string>) => {
+    const template = findTemplate(id)!;
+    return renderText(template.build(values, CTX), template.format);
+  };
+
+  test('answering affidavit: bare denials, unanswered paragraphs and the 15-day limit', () => {
+    const issues = issuesFor('answering-affidavit', {
+      paragraphCount: '4',
+      responses: '1 to 2: Admitted.\n3: Denied.',
+      opposeDate: '2026-10-01',
+    });
+    expect(issues.some((issue) => /Paragraph 4 /.test(issue.message))).toBe(true);
+    expect(issues.some((issue) => /bare denial/.test(issue.message))).toBe(true);
+    expect(issues.find((issue) => issue.field === 'opposeDate')?.message).toMatch(
+      /due by 22 October 2026/,
+    );
+    expect(text('replying-affidavit', { responses: '12: Denied, as appears from AA2.' })).toContain(
+      'Ad paragraph 12: Denied',
+    );
+  });
+
+  test('simple summons, notice of bar and Rule 41A notice', () => {
+    expect(must('simple-summons', { defendDays: '5' })).toContain('defendDays');
+    expect(
+      text('simple-summons', { amount: '8000', cause: 'money lent', secondParty: 'T Nkosi' }),
+    ).toContain('Payment of the sum of R8 000.00');
+    expect(must('notice-of-bar', { dueDate: '2026-11-20' })).toContain('dueDate');
+    expect(must('notice-of-bar', { dueDate: '2026-11-02' })).not.toContain('dueDate');
+    expect(
+      text('rule-41a-notice', { ourRole: 'Respondent', agrees: 'Opposes', reasons: 'x' }),
+    ).toContain('the respondent opposes the referral of this application to mediation');
+  });
+
+  test('letters: a without-prejudice offer and a notice of breach', () => {
+    expect(must('without-prejudice-offer', {})).toContain('amount');
+    expect(
+      text('without-prejudice-offer', { amount: '5000', side: 'Accept', letterDate: '2026-11-16' }),
+    ).toMatch(/WITHOUT PREJUDICE[\s\S]*accept payment of R5 000\.00[\s\S]*30 November 2026/);
+    expect(must('notice-of-breach', { consumer: 'Yes', remedyDays: '7' })).toContain('remedyDays');
+    expect(
+      text('notice-of-breach', {
+        consumer: 'Yes',
+        remedyDays: '20',
+        letterDate: '2026-11-16',
+        clause: 'clause 18: notice',
+      }),
+    ).toContain(
+      'In terms of clause 18 of the agreement, you are hereby called upon to remedy the breach within 20 business days',
+    );
+  });
+
+  test('labour: arbitration time limits and BCEA minimums', () => {
+    expect(
+      must('lra-7-13-arbitration', { certificateDate: '2026-07-01', requestDate: '2026-11-16' }),
+    ).toContain('lateReasons');
+    expect(
+      must('lra-7-13-arbitration', {
+        conciliationReferred: '2026-11-01',
+        requestDate: '2026-11-16',
+      }),
+    ).toContain('conciliationReferred');
+    expect(
+      issuesFor('lra-7-13-arbitration', {
+        reason: 'Automatically unfair dismissal',
+        certificateDate: '2026-11-01',
+      }).find((issue) => issue.field === 'reason')?.severity,
+    ).toBe('should');
+    expect(
+      must('employment-contract', {
+        weeklyHours: '48',
+        overtimeRate: '1',
+        leaveDays: '10',
+        daysPerWeek: '5',
+      }),
+    ).toEqual(['weeklyHours', 'overtimeRate', 'leaveDays']);
+    expect(
+      issuesFor('employment-contract', { startDate: '2026-12-01', endDate: '2027-11-30' }).some(
+        (issue) => issue.field === 'fixedTermReason',
+      ),
+    ).toBe(true);
+  });
+
+  test('general power of attorney: standard powers, and land needs a special power', () => {
+    expect(text('general-power-of-attorney', {})).toContain('lose the mental capacity');
+    expect(
+      issuesFor('general-power-of-attorney', { powers: 'to sell my house in Soweto' }).some(
+        (issue) => issue.field === 'powers',
+      ),
+    ).toBe(true);
+  });
+});
+
 describe('drafts on a matter', () => {
   let attorney: TestStaff;
   let secretary: TestStaff;

@@ -6,7 +6,7 @@ import { parseRand, randWithWords } from '../fields';
 import type { Block } from '../model';
 import { LETTER_FORMAT, UNREVIEWED, letterhead, or, v, type DraftTemplate } from '../template';
 
-const sender = [
+export const sender = [
   { key: 'authorName', label: 'Signed by', type: 'text' as const, required: true },
   {
     key: 'authorCapacity',
@@ -16,7 +16,7 @@ const sender = [
   },
 ];
 
-const letterFields = [
+export const letterFields = [
   {
     key: 'letterDate',
     label: 'Date',
@@ -33,7 +33,7 @@ const letterFields = [
   { key: 'yourRef', label: 'Your reference', type: 'text' as const },
 ];
 
-const signOff = (values: Record<string, string>, firm: string): Block[] => [
+export const signOff = (values: Record<string, string>, firm: string): Block[] => [
   { kind: 'text', text: 'Yours faithfully' },
   {
     kind: 'signature',
