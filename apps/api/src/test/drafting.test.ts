@@ -543,6 +543,92 @@ describe('labour and family batch', () => {
   });
 });
 
+describe('property, estates, commercial and practice batch', () => {
+  const issuesFor = (id: string, values: Record<string, string>) =>
+    findTemplate(id)!.checks(values, CTX);
+  const must = (id: string, values: Record<string, string>) =>
+    issuesFor(id, values)
+      .filter((issue) => issue.severity === 'must')
+      .map((issue) => issue.field);
+  const text = (id: string, values: Record<string, string>) => {
+    const template = findTemplate(id)!;
+    return renderText(template.build({ ...template.defaults, ...values }, CTX), template.format);
+  };
+
+  test('every catalogue kind now has a template', async () => {
+    const { DRAFTING_CATALOGUE } = await import('@ahava88/shared');
+    expect(DRAFTING_CATALOGUE.every((kind) => kind.availability === 'template')).toBe(true);
+    expect(TEMPLATES).toHaveLength(DRAFTING_CATALOGUE.length);
+  });
+
+  test('conveyancing: extent in words and figures, long leases, servitudes', () => {
+    expect(must('deed-of-transfer', { extent: '495 square metres' })).toContain('extent');
+    expect(
+      must('deed-of-transfer', { extent: '495 (FOUR HUNDRED AND NINETY FIVE) square metres' }),
+    ).not.toContain('extent');
+    expect(must('deed-of-transfer', { saleDate: '2026-10-01', poaDate: '2026-09-01' })).toContain(
+      'poaDate',
+    );
+    expect(issuesFor('commercial-lease', { years: '10' }).some((i) => i.field === 'years')).toBe(
+      true,
+    );
+    expect(
+      must('notarial-deed-servitude', { kind: 'Praedial (in favour of another property)' }),
+    ).toContain('dominant');
+  });
+
+  test('estates: codicil witnesses, small estates and the L&D account', () => {
+    expect(
+      must('codicil', {
+        added: 'I leave my car to Sipho Dube.',
+        witnesses: 'Sipho Dube\nThandi Nkosi',
+      }),
+    ).toContain('witnesses');
+    expect(text('estate-reporting', { value: '200000', will: 'No' })).toContain('section 18(3)');
+    const account = {
+      assets: 'House | 1000000\nBank | 200000',
+      liabilities: 'Bond | 300000',
+      costs: 'Master’s fees | 7000',
+      executorFee: '50000',
+      heirs: 'A | 50\nB | 40',
+    };
+    expect(must('liquidation-account', account)).toEqual(
+      expect.arrayContaining(['heirs', 'executorFee']),
+    );
+    expect(
+      text('liquidation-account', { ...account, executorFee: '42000', heirs: 'A | 50\nB | 50' }),
+    ).toContain('Balance for distribution ........ R851 000.00');
+  });
+
+  test('commercial and practice: resolutions, shareholdings, statements and bills', () => {
+    expect(
+      issuesFor('company-resolution', {
+        body: 'Shareholders',
+        kind: 'Ordinary resolution',
+        resolved: 'That the MOI be amended.',
+      }).some((i) => i.field === 'kind' && i.severity === 'should'),
+    ).toBe(true);
+    expect(text('shareholders-agreement', { shareholders: 'A | 60\nB | 40' })).toContain(
+      'A: 60 shares (60.00%)',
+    );
+    const statement = text('statement-of-account', {
+      fees: '2026-11-01 | Consultation | 1000',
+      payments: '2026-11-05 | EFT | 500',
+    });
+    expect(statement).toContain('VAT at 15% ........ R150.00');
+    expect(statement).toContain('Balance due by the client ........ R650.00');
+    expect(text('file-note', { minutes: '13' })).toContain('3 units of 6 minutes');
+    expect(text('bill-of-costs', { items: '2026-03-01 | Drawing summons | 1000 | 200' })).toContain(
+      'TOTAL ........ R1 350.00',
+    );
+    expect(
+      issuesFor('reporting-letter', { costsToDate: '9000', estimate: '8000' }).some(
+        (i) => i.field === 'estimate' && i.severity === 'should',
+      ),
+    ).toBe(true);
+  });
+});
+
 describe('drafts on a matter', () => {
   let attorney: TestStaff;
   let secretary: TestStaff;

@@ -47,20 +47,34 @@ Research notes behind the drafting module (roadmap 15a). The catalogue (`package
 | Request for arbitration (7.13) | Within 90 days of the certificate, otherwise condonation; without a certificate, only after 30 days; retrenchment and automatically unfair dismissals go to the Labour Court | LRA ss 136(1), 191(5), (12) |
 | Employment contract | Ordinary hours at most 45 a week; overtime at least 1.5×; annual leave at least 15 working days (18 for a six-day week); BCEA notice periods; fixed terms over three months need a reason; restraints must be reasonable; minimum wage | BCEA ss 9, 10, 20, 22, 29, 37; LRA s 198B; *Magna Alloys* 1984 (4) SA 874 (A) |
 | General power of attorney | Land needs a special power of attorney; ends on mental incapacity | Common law; Deeds Registries Act s 20 |
+| Ex parte and urgent notices of motion | Hearing on a court day; why no notice is given; interim relief needs a return date; urgency set out in the founding affidavit | Uniform Rules 6(4), 6(12); *Schlesinger* 1979 (4) SA 342 (W) |
+| Exception; Rule 30 notice | Notice to remove the cause of complaint (15 days) before a vague-and-embarrassing exception; Rule 30 notice within 10 days of becoming aware | Uniform Rules 23(1)(a), 30(2)(b) |
+| Discovery affidavit | Ground of privilege for each part 2 document; within 20 days of the notice | Uniform Rule 35 |
+| Heads of argument; draft order | Full citations for every authority; counsel's scale (A, B or C) in costs orders | Practice directives; Uniform Rule 67A(3) |
+| Index to the papers | Page ranges computed in order | Gauteng indexing and pagination directive (2025) |
+| Leave to appeal (civil) | Within 15 days; "would" have reasonable prospects; petition within a month of refusal | Superior Courts Act s 17; Uniform Rule 49(1)(b) |
+| Settlement made an order of court | Relates to the issues, competent, enforceable | *Eke v Parsons* 2016 (3) SA 37 (CC) |
+| Magistrates' Court summons, application, plea | At least 10 days to defend or oppose; NCA s 129/130 allegations on credit agreements; plea answers every paragraph within 20 days | MC Rules 13, 17, 55; NCA ss 129, 130 |
+| Section 65A notice | Registered letter first where judgment was not given in the debtor's presence; personal service | MCA ss 65A, 65D |
+| Bail affidavit | Schedule 6 exceptional circumstances; disclosure of previous convictions and pending charges | CPA s 60(11), (11B) |
+| Section 112(2) statement; criminal appeal | Fault element stated; leave to appeal within 14 days of sentence | CPA ss 112(2), 309B, 316 |
+| Condonation; Labour Court statement of claim | The whole delay explained; 90 days from the certificate | *Melane v Santam* 1962 (4) SA 531 (A); LRA s 191(11) |
+| Disciplinary notice and outcome; s 189(3) notice | Time to prepare; findings and sanction; 30-day referral right; s 189(3) disclosures; severance at least one week per year; s 189A thresholds counting the last 12 months | Code of Good Practice: Dismissal (2023); LRA ss 189, 189A; BCEA s 41 |
+| Divorce summons, settlement, parenting plan | Children's arrangements (s 6, Family Advocate); pension orders naming the fund and share; the child's views; jurisdiction | Divorce Act ss 2, 6, 7(8), 9; PFA s 37D(4); Children's Act ss 10, 31, 33, 34 |
+| Antenuptial contract; maintenance complaint | Accrual starting values; notarial execution and registration within three months; needs totalled | MPA ss 6, 21; DRA s 87; Maintenance Act ss 6, 15 |
+| Deed of transfer, mortgage bond, servitude, commercial lease | Extent in words and figures; title deed format; power of attorney after the sale; dominant tenement and SG diagram; leases of ten years or more registered | DRA ss 15, 20, 50, 65; reg 29; Act 18 of 1969 s 1 |
+| Codicil, estate reporting, L&D account | Benefiting witnesses; 14 days to report; small estates (s 18(3)); heirs' shares total 100%; executor's fee at most 3.5% | Wills Act ss 2, 4A; AEA ss 7, 18(3), 35, 51; reg 8 |
+| Company resolution, shareholders' agreement, cession, NDA, service agreement | Special-resolution matters; s 60 / s 74 written resolutions; consistency with the MOI; secured debt identified; POPIA operator terms; CPA unfair terms | Companies Act ss 15(7), 60, 65, 74; POPIA ss 19–21; CPA ss 48–51 |
+| Statement of account, bill of costs, file note, reporting letter | Totals and VAT computed; 6-minute units; costs against the estimate | LPA s 35; Uniform Rule 70; VAT Act s 7 |
 | Every template | Required fields; valid SA ID numbers (date and Luhn check digit); real dates; Rand amounts | — |
 
 Business and court days skip weekends and public holidays, and for a notice of intention to defend also 16 December to 15 January. Calendar-day periods (for example LRA referrals) follow the Interpretation Act 33 of 1957 s 4: the first day is left out, and a last day on a Sunday or public holiday moves to the next day. Public holidays follow the Public Holidays Act 36 of 1994 (Good Friday and Family Day computed from Easter, and a holiday that falls on a Sunday moves to the Monday).
 
 ## Catalogue
 
-The catalogue has 12 categories: correspondence, engagement, High Court, Magistrates' Courts, affidavits, labour, criminal, family, property, estates, commercial and practice. Each entry gives its purpose, forum and legal basis. Kinds without a template show as *planned*.
+The catalogue has 12 categories: correspondence, engagement, High Court, Magistrates' Courts, affidavits, labour, criminal, family, property, estates, commercial and practice. Each entry gives its purpose, forum and legal basis. Kinds without a template (none at present; new kinds can be added) show as *planned*.
 
-**Templates written so far (30):**
-- First batch: letter of demand, section 129 notice, section 3 notice, affidavit, notice of motion, special power of attorney, mandate and fee agreement, last will.
-- Second batch: founding and confirmatory affidavits, combined summons, notice of intention to defend, plea, CCMA referral (with condonation), residential lease, deed of sale, power of attorney to pass transfer, acknowledgment of debt, suretyship, contingency fees agreement.
-- Third batch: answering and replying affidavits, simple summons, notice of bar, Rule 41A notice, without-prejudice offer, notice of breach, request for arbitration (LRA 7.13), employment contract, general power of attorney.
-
-**Suggested next batch:** exception, Rule 30 notice, discovery affidavit, heads of argument, divorce summons and settlement agreement, parenting plan, maintenance complaint, non-disclosure agreement, company resolution and codicil.
+**All 77 kinds in the catalogue now have a standard template**, written in seven batches (PRs #62–#72). All are *unreviewed*: they wait for Dumisani Lukhele's review before they are marked reviewed. Suggested review order: the templates used most (letters of demand, affidavits, summonses and pleas, leases and deeds of sale, employment documents), then those with prescribed forms that may have changed (contingency fees agreement, CCMA and Labour Court forms, Master's forms, deeds office documents).
 
 ## Adding a template
 

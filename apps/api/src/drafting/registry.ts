@@ -3,6 +3,26 @@
 import type { DraftTemplateSummary } from '@ahava88/shared';
 import type { DraftTemplate } from './template';
 import {
+  nda,
+  serviceAgreement,
+  shareholdersAgreement,
+  companyResolution,
+  cession,
+  fileNote,
+  statementOfAccount,
+  reportingLetter,
+  billOfCosts,
+} from './templates/commercial-practice';
+import {
+  commercialLease,
+  deedOfTransfer,
+  mortgageBond,
+  notarialDeedServitude,
+  codicil,
+  estateReporting,
+  liquidationAccount,
+} from './templates/conveyancing-estates';
+import {
   divorceSummons,
   divorceSettlement,
   parentingPlan,
@@ -130,6 +150,22 @@ export const TEMPLATES: readonly DraftTemplate[] = [
   parentingPlan,
   antenuptialContract,
   maintenanceComplaint,
+  commercialLease,
+  deedOfTransfer,
+  mortgageBond,
+  notarialDeedServitude,
+  codicil,
+  estateReporting,
+  liquidationAccount,
+  nda,
+  serviceAgreement,
+  shareholdersAgreement,
+  companyResolution,
+  cession,
+  fileNote,
+  statementOfAccount,
+  reportingLetter,
+  billOfCosts,
 ];
 
 export function findTemplate(id: string): DraftTemplate | undefined {
