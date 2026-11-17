@@ -127,6 +127,130 @@ export const specialPowerOfAttorney: DraftTemplate = {
   },
 };
 
+// ------------------------------------------------------------ general power of attorney
+
+export const generalPowerOfAttorney: DraftTemplate = {
+  id: 'general-power-of-attorney',
+  version: '2026.11-1',
+  name: 'General power of attorney',
+  category: 'engagement',
+  purpose:
+    'Authorises an agent to manage the principal’s affairs generally; it ends when the principal dies or loses mental capacity.',
+  basis: [
+    'Common law of agency (mandate; ends on the principal’s death or mental incapacity)',
+    'Deeds Registries Act 47 of 1937 s 20 (land is transferred under a special power of attorney)',
+  ],
+  review: UNREVIEWED,
+  format: AGREEMENT_FORMAT,
+  defaults: { substitution: 'Yes' },
+  sections: [
+    {
+      key: 'principal',
+      title: 'Principal',
+      fields: [
+        {
+          key: 'principalName',
+          label: 'Principal',
+          type: 'text',
+          required: true,
+          prefill: 'client.name',
+        },
+        {
+          key: 'principalId',
+          label: 'ID or registration number',
+          type: 'id_number',
+          prefill: 'client.idNumber',
+        },
+        { key: 'principalAddress', label: 'Address', type: 'longtext', prefill: 'client.address' },
+      ],
+    },
+    {
+      key: 'agent',
+      title: 'Agent and authority',
+      fields: [
+        { key: 'agentName', label: 'Agent', type: 'text', required: true },
+        { key: 'agentId', label: 'Agent’s ID number', type: 'id_number' },
+        {
+          key: 'powers',
+          label: 'Powers included, one per line',
+          type: 'longtext',
+          help: 'Leave empty for the standard list (bank accounts, contracts, payments, correspondence with authorities, legal proceedings).',
+        },
+        { key: 'exclusions', label: 'Excluded or limited, one per line', type: 'longtext' },
+        {
+          key: 'substitution',
+          label: 'May the agent appoint a substitute?',
+          type: 'choice',
+          required: true,
+          choices: ['Yes', 'No'],
+        },
+        { key: 'validUntil', label: 'Valid until', type: 'date' },
+        { key: 'place', label: 'Place of signing', type: 'text', required: true },
+        { key: 'signDate', label: 'Date of signing', type: 'date' },
+      ],
+    },
+  ],
+  build(values) {
+    const standard = [
+      'to open, operate and close bank and investment accounts in my name, and to deposit, withdraw and transfer money;',
+      'to receive and pay all amounts due to or by me, and to give receipts;',
+      'to sign, conclude, vary and cancel contracts for me, other than for the sale or mortgage of land;',
+      'to deal with the South African Revenue Service, municipalities and other authorities, and to sign returns, applications and forms;',
+      'to institute, defend, settle or withdraw legal proceedings, and to instruct attorneys and advocates for that purpose;',
+      'to manage, let and insure my property.',
+    ];
+    const powers = lines(values, 'powers').length ? lines(values, 'powers') : standard;
+    const blocks: Block[] = [
+      {
+        kind: 'text',
+        text: `I, the undersigned, ${or(v(values, 'principalName'), 'principal')}${v(values, 'principalId') ? ` (identity/registration number ${v(values, 'principalId')})` : ''}${v(values, 'principalAddress') ? ` of ${v(values, 'principalAddress').split('\n').join(', ')}` : ''}, hereby nominate, constitute and appoint ${or(v(values, 'agentName'), 'agent')}${v(values, 'agentId') ? ` (identity number ${v(values, 'agentId')})` : ''}${v(values, 'substitution') === 'Yes' ? ', with power of substitution,' : ''} to be my lawful agent in my name, place and stead, to manage and transact all my affairs, and in particular:`,
+      },
+      ...powers.map((text) => ({ kind: 'para' as const, text })),
+      ...(lines(values, 'exclusions').length
+        ? [
+            { kind: 'text' as const, text: 'This authority does not extend to the following:' },
+            ...lines(values, 'exclusions').map((text) => ({ kind: 'para' as const, text })),
+          ]
+        : []),
+      {
+        kind: 'para',
+        text: 'And generally to do whatever my agent considers necessary in managing my affairs, as fully as I could do if personally present, and I ratify and confirm whatever my agent lawfully does under this power of attorney.',
+      },
+      {
+        kind: 'para',
+        text: `${v(values, 'validUntil') ? `This power of attorney is valid until ${longDate(v(values, 'validUntil'))}, unless I revoke it earlier in writing.` : 'This power of attorney is valid until I revoke it in writing.'} It ends in any event if I die or lose the mental capacity to manage my affairs.`,
+      },
+      { kind: 'text', text: signedAt(values, ' in the presence of the undersigned witnesses') },
+      { kind: 'signature', lines: [`PRINCIPAL: ${or(v(values, 'principalName'), 'principal')}`] },
+      ...witnesses,
+    ];
+    return { title: 'General power of attorney', blocks };
+  },
+  checks(values) {
+    const issues: DraftIssue[] = [];
+    if (
+      /\b(sell|transfer|mortgage|bond)\b.*\b(land|erf|property|house|immovable)\b/i.test(
+        v(values, 'powers'),
+      )
+    ) {
+      issues.push({
+        severity: 'should',
+        field: 'powers',
+        message:
+          'Selling, transferring or mortgaging land needs a special power of attorney (and the conveyancer’s power of attorney to pass transfer), not a general one.',
+        basis: 'Deeds Registries Act 47 of 1937 s 20; Deeds Registries Regulations',
+      });
+    }
+    issues.push({
+      severity: 'note',
+      message:
+        'A power of attorney ends when the principal loses mental capacity, which is often when one is most needed. If that is the concern, discuss a curatorship or a living will and trust structure instead; banks may also insist on their own forms.',
+      basis: 'Common law of agency; Uniform Rule 57 (curators)',
+    });
+    return issues;
+  },
+};
+
 // ------------------------------------------------------------ mandate and fee agreement
 
 export const mandateFeeAgreement: DraftTemplate = {

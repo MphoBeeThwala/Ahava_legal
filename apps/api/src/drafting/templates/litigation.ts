@@ -23,7 +23,7 @@ const VERSION = '2026.11-1';
 
 // ------------------------------------------------------------ shared pieces
 
-function attorneysFields(party: string): DraftField[] {
+export function attorneysFields(party: string): DraftField[] {
   return [
     { key: 'firmName', label: 'Firm', type: 'text', required: true, prefill: 'firm.legalName' },
     {
@@ -47,7 +47,7 @@ function attorneysFields(party: string): DraftField[] {
   ];
 }
 
-function attorneysBlock(values: Values, party: string): Block[] {
+export function attorneysBlock(values: Values, party: string): Block[] {
   return [
     {
       kind: 'text',
@@ -71,10 +71,10 @@ function attorneysBlock(values: Values, party: string): Block[] {
   ];
 }
 
-const registrar = (values: Values) =>
+export const registrar = (values: Values) =>
   `TO: THE REGISTRAR OF THE ${(v(values, 'court').split(',')[0] || 'HIGH COURT').toUpperCase()}`;
 
-const oathField: DraftField = {
+export const oathField: DraftField = {
   key: 'oath',
   label: 'Oath or affirmation',
   type: 'choice',
@@ -82,7 +82,7 @@ const oathField: DraftField = {
   choices: ['Oath', 'Affirmation'],
 };
 
-function opening(values: Values): Block {
+export function opening(values: Values): Block {
   const affirm = v(values, 'oath') === 'Affirmation';
   return {
     kind: 'text',
@@ -90,7 +90,7 @@ function opening(values: Values): Block {
   };
 }
 
-function commissioner(values: Values): Block[] {
+export function commissioner(values: Values): Block[] {
   const affirm = v(values, 'oath') === 'Affirmation';
   return [
     { kind: 'signature', lines: ['DEPONENT'] },
@@ -105,18 +105,18 @@ function commissioner(values: Values): Block[] {
   ];
 }
 
-const commissionerNote: DraftIssue = {
+export const commissionerNote: DraftIssue = {
   severity: 'note',
   message:
     'The deponent must sign in the commissioner’s presence, and a commissioner may not administer the oath in a matter in which they have an interest (e.g. an attorney at the firm acting in the matter).',
   basis: 'GN R1258 of 1972 regs 3(1), 7(1)',
 };
 
-const paras = (values: Values, key: string): Block[] =>
+export const paras = (values: Values, key: string): Block[] =>
   lines(values, key).map((text) => ({ kind: 'para' as const, text }));
 
 /** Annexure marks used in the text (FA1, "POC2", A3 …) that are not in the annexure list. */
-function missingAnnexures(text: string, list: string, prefix: string): string[] {
+export function missingAnnexures(text: string, list: string, prefix: string): string[] {
   const used = new Set(text.match(new RegExp(`\\b${prefix}\\d+\\b`, 'g')) ?? []);
   const listed = new Set(list.match(new RegExp(`\\b${prefix}\\d+\\b`, 'g')) ?? []);
   return [...used].filter((mark) => !listed.has(mark)).sort();

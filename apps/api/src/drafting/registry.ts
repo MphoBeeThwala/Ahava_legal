@@ -5,7 +5,15 @@ import type { DraftTemplate } from './template';
 import { letterOfDemand, ncaS129Notice, organOfStateNotice } from './templates/correspondence';
 import { affidavit, noticeOfMotion } from './templates/court';
 import { acknowledgmentOfDebt, contingencyFeesAgreement, suretyship } from './templates/commercial';
-import { ccmaReferral } from './templates/labour';
+import { arbitrationRequest, ccmaReferral, employmentContract } from './templates/labour';
+import { noticeOfBreach, withoutPrejudiceOffer } from './templates/letters';
+import {
+  answeringAffidavit,
+  noticeOfBar,
+  replyingAffidavit,
+  rule41aNotice,
+  simpleSummons,
+} from './templates/proceedings';
 import {
   combinedSummons,
   confirmatoryAffidavit,
@@ -14,7 +22,12 @@ import {
   plea,
 } from './templates/litigation';
 import { deedOfSale, poaToPassTransfer, residentialLease } from './templates/property';
-import { lastWill, mandateFeeAgreement, specialPowerOfAttorney } from './templates/instruments';
+import {
+  generalPowerOfAttorney,
+  lastWill,
+  mandateFeeAgreement,
+  specialPowerOfAttorney,
+} from './templates/instruments';
 
 export const TEMPLATES: readonly DraftTemplate[] = [
   letterOfDemand,
@@ -37,6 +50,16 @@ export const TEMPLATES: readonly DraftTemplate[] = [
   acknowledgmentOfDebt,
   suretyship,
   contingencyFeesAgreement,
+  answeringAffidavit,
+  replyingAffidavit,
+  simpleSummons,
+  noticeOfBar,
+  rule41aNotice,
+  withoutPrejudiceOffer,
+  noticeOfBreach,
+  arbitrationRequest,
+  employmentContract,
+  generalPowerOfAttorney,
 ];
 
 export function findTemplate(id: string): DraftTemplate | undefined {

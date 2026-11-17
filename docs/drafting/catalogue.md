@@ -37,6 +37,16 @@ Research notes behind the drafting module (roadmap 15a). The catalogue (`package
 | Acknowledgment of debt | Instalment needed; interest for a natural person may bring in the National Credit Act; section 58 consent to judgment | Prescription Act s 14; MCA s 58; NCA ss 8, 40, 101 |
 | Suretyship | The secured debt identifiable from the deed; spouse's written consent (in community); unlimited liability flagged | General Law Amendment Act s 6; MPA s 15(2)(h), (5); NCA ss 4(2)(c), 8(5) |
 | Contingency fees agreement | Success fee at most 100% above normal fees, and at most 25% of a money award; 14-day cooling-off; settlement only with consent; compare with the prescribed form | Contingency Fees Act ss 2(2), 3, 4, 5 |
+| Answering affidavit | Every founding paragraph answered; bare denials flagged (no genuine dispute of fact); last day 15 court days after the notice to oppose | Uniform Rule 6(5)(d)(ii); *Plascon-Evans* 1984 (3) SA 623 (A); *Wightman* 2008 (3) SA 371 (SCA) |
+| Replying affidavit | Last day 10 court days after the answer; no new case in reply | Uniform Rules 6(5)(e), 6(15); *Mistry* 1979 (1) SA 626 (A) |
+| Simple summons | At least 10 court days to defend; a concise cause of action; only for a debt or liquidated demand | Uniform Rules 17(2)(b), 19(1), 20(1), 32 |
+| Notice of bar | Only once the time for the pleading has expired; not needed for a replication | Uniform Rule 26 |
+| Rule 41A notice | Agrees or opposes, with reasons; who serves it when | Uniform Rule 41A(2) |
+| Without-prejudice offer | Something must be offered; the privilege covers only genuine settlement attempts, not admissions of insolvency; Rule 34 once proceedings have begun | *Naidoo* 1978 (3) SA 666 (A); *KLD Residential* 2017 (6) SA 55 (SCA); Uniform Rule 34 |
+| Notice of breach | 20 business days to remedy for fixed-term consumer agreements; without a breach clause, material breach or a reasonable notice making time of the essence | CPA s 14(2)(b)(ii); common law |
+| Request for arbitration (7.13) | Within 90 days of the certificate, otherwise condonation; without a certificate, only after 30 days; retrenchment and automatically unfair dismissals go to the Labour Court | LRA ss 136(1), 191(5), (12) |
+| Employment contract | Ordinary hours at most 45 a week; overtime at least 1.5×; annual leave at least 15 working days (18 for a six-day week); BCEA notice periods; fixed terms over three months need a reason; restraints must be reasonable; minimum wage | BCEA ss 9, 10, 20, 22, 29, 37; LRA s 198B; *Magna Alloys* 1984 (4) SA 874 (A) |
+| General power of attorney | Land needs a special power of attorney; ends on mental incapacity | Common law; Deeds Registries Act s 20 |
 | Every template | Required fields; valid SA ID numbers (date and Luhn check digit); real dates; Rand amounts | — |
 
 Business and court days skip weekends and public holidays, and for a notice of intention to defend also 16 December to 15 January. Calendar-day periods (for example LRA referrals) follow the Interpretation Act 33 of 1957 s 4: the first day is left out, and a last day on a Sunday or public holiday moves to the next day. Public holidays follow the Public Holidays Act 36 of 1994 (Good Friday and Family Day computed from Easter, and a holiday that falls on a Sunday moves to the Monday).
@@ -45,9 +55,12 @@ Business and court days skip weekends and public holidays, and for a notice of i
 
 The catalogue has 12 categories: correspondence, engagement, High Court, Magistrates' Courts, affidavits, labour, criminal, family, property, estates, commercial and practice. Each entry gives its purpose, forum and legal basis. Kinds without a template show as *planned*.
 
-**Templates written so far (20):** letter of demand, section 129 notice, section 3 notice, affidavit, notice of motion, special power of attorney, mandate and fee agreement, last will; and in the second batch: founding and confirmatory affidavits, combined summons, notice of intention to defend, plea, CCMA referral (with condonation), residential lease, deed of sale, power of attorney to pass transfer, acknowledgment of debt, suretyship and contingency fees agreement.
+**Templates written so far (30):**
+- First batch: letter of demand, section 129 notice, section 3 notice, affidavit, notice of motion, special power of attorney, mandate and fee agreement, last will.
+- Second batch: founding and confirmatory affidavits, combined summons, notice of intention to defend, plea, CCMA referral (with condonation), residential lease, deed of sale, power of attorney to pass transfer, acknowledgment of debt, suretyship, contingency fees agreement.
+- Third batch: answering and replying affidavits, simple summons, notice of bar, Rule 41A notice, without-prejudice offer, notice of breach, request for arbitration (LRA 7.13), employment contract, general power of attorney.
 
-**Suggested next batch:** answering and replying affidavits, simple summons, notice of bar, Rule 41A notice, without-prejudice offer, notice of breach, request for arbitration (LRA 7.13), employment contract and general power of attorney.
+**Suggested next batch:** exception, Rule 30 notice, discovery affidavit, heads of argument, divorce summons and settlement agreement, parenting plan, maintenance complaint, non-disclosure agreement, company resolution and codicil.
 
 ## Adding a template
 
