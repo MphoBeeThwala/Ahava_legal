@@ -62,6 +62,7 @@ locals {
       AI_MODEL                           = var.ai_model
       AI_RESEARCH_MODEL                  = var.ai_research_model
       AI_FIRM_MONTHLY_TOKENS             = tostring(var.ai_firm_monthly_tokens)
+      LAWS_AFRICA_KB_CODES               = var.laws_africa_kb_codes
     },
     var.app_settings,
   )
