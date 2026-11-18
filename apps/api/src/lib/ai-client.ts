@@ -245,7 +245,18 @@ class FallbackClient implements AiClient {
   async complete(request: AiRequest): Promise<AiResult> {
     try {
       return await this.primary.complete(request);
-    } catch {
+    } catch (primaryError) {
+      // Logged so a failing main model shows in the logs (the message is ours:
+      // a status code or a timeout, never the prompt).
+      console.warn(
+        JSON.stringify({
+          level: 'warn',
+          message: 'ai_primary_failed_using_fallback',
+          provider: this.primary.provider,
+          fallback: this.fallback.provider,
+          error: primaryError instanceof Error ? primaryError.message : 'unknown',
+        }),
+      );
       try {
         return await this.fallback.complete(request);
       } catch (error) {

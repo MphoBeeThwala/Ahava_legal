@@ -14,6 +14,9 @@ export const api: ApiClient = axios.create({
 /** The best human-readable message for a failed API call. */
 export function apiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
+    if (!error.response && error.code === 'ECONNABORTED') {
+      return 'The server took too long to answer. Please try again; nothing you entered was lost.';
+    }
     return error.response?.data?.message || error.message || fallback;
   }
   if (error instanceof Error && error.message) {

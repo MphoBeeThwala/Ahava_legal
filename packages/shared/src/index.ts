@@ -917,6 +917,8 @@ export interface PublicSubmission {
   createdAt: string;
   assessment: Assessment | null;
   matterCase: MatterCaseSummary | null;
+  /** A background assessment that is running or failed (absent when none is pending). */
+  assessmentJob?: { state: 'running' | 'failed'; error: string | null; startedAt: string } | null;
 }
 
 // ---------------------------------------------------------------- errors
