@@ -441,6 +441,7 @@ export async function wip(): Promise<WipSummary> {
       caseId: cases.id,
       caseNumber: cases.caseNumber,
       title: cases.title,
+      titleEncrypted: cases.titleEncrypted,
       units: sql<number>`sum(${timeEntries.units})::int`,
       value: sql<string>`sum(${timeEntries.amountCents})`,
       entries: sql<number>`count(*)::int`,
@@ -449,7 +450,7 @@ export async function wip(): Promise<WipSummary> {
     .from(timeEntries)
     .innerJoin(cases, eq(cases.id, timeEntries.caseId))
     .where(unbilled)
-    .groupBy(cases.id, cases.caseNumber, cases.title)
+    .groupBy(cases.id, cases.caseNumber, cases.title, cases.titleEncrypted)
     .orderBy(sql`sum(${timeEntries.amountCents}) desc`);
   const peopleRows = await db()
     .select({
@@ -464,15 +465,17 @@ export async function wip(): Promise<WipSummary> {
     .groupBy(users.id, users.fullName)
     .orderBy(asc(users.fullName));
 
-  const matters = matterRows.map((row) => ({
-    caseId: row.caseId,
-    caseNumber: row.caseNumber,
-    title: row.title,
-    units: row.units,
-    value: fromCents(Number(row.value)),
-    entries: row.entries,
-    oldestWorkDate: row.oldest,
-  }));
+  const matters = await Promise.all(
+    matterRows.map(async (row) => ({
+      caseId: row.caseId,
+      caseNumber: row.caseNumber,
+      title: await intakeService.matterTitle(row),
+      units: row.units,
+      value: fromCents(Number(row.value)),
+      entries: row.entries,
+      oldestWorkDate: row.oldest,
+    })),
+  );
   return {
     units: matters.reduce((total, row) => total + row.units, 0),
     value: fromCents(matterRows.reduce((total, row) => total + Number(row.value), 0)),

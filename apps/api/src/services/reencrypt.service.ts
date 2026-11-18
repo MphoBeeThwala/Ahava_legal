@@ -34,6 +34,10 @@ import {
   supportTickets,
   supportTicketMessages,
   cases,
+  caseTasks,
+  caseTimeline,
+  notifications,
+  reportSnapshots,
   type FirmRow,
 } from '../db/schema';
 import { activeKey, deleteKey } from './keys.service';
@@ -46,6 +50,67 @@ const BATCH = 200;
 
 function notOnVersion(column: AnyPgColumn, version: number): SQL {
   return not(sql`${column} like ${`v2:${version}:%`}`);
+}
+
+/** Free text sealed with the firm key (sealed-text.ts): each nullable column. */
+const SEALED_TEXT = [
+  { table: cases, id: cases.id, column: cases.titleEncrypted, key: 'titleEncrypted' },
+  {
+    table: caseTasks,
+    id: caseTasks.id,
+    column: caseTasks.contentEncrypted,
+    key: 'contentEncrypted',
+  },
+  {
+    table: caseTimeline,
+    id: caseTimeline.id,
+    column: caseTimeline.contentEncrypted,
+    key: 'contentEncrypted',
+  },
+  { table: documents, id: documents.id, column: documents.metaEncrypted, key: 'metaEncrypted' },
+  {
+    table: notifications,
+    id: notifications.id,
+    column: notifications.contentEncrypted,
+    key: 'contentEncrypted',
+  },
+  {
+    table: reportSnapshots,
+    id: reportSnapshots.id,
+    column: reportSnapshots.titleEncrypted,
+    key: 'titleEncrypted',
+  },
+] as const;
+
+async function countSealedText(where: (column: AnyPgColumn) => SQL): Promise<number> {
+  let total = 0;
+  for (const sealed of SEALED_TEXT) {
+    const [row] = await db()
+      .select({ value: count() })
+      .from(sealed.table)
+      .where(and(isNotNull(sealed.column), where(sealed.column)));
+    total += row?.value ?? 0;
+  }
+  return total;
+}
+
+async function reencryptSealedText(version: number): Promise<number> {
+  let done = 0;
+  for (const sealed of SEALED_TEXT) {
+    const rows = await db()
+      .select({ id: sealed.id, value: sealed.column })
+      .from(sealed.table)
+      .where(and(isNotNull(sealed.column), notOnVersion(sealed.column, version)))
+      .limit(BATCH);
+    for (const row of rows) {
+      await db()
+        .update(sealed.table)
+        .set({ [sealed.key]: await encryptJson(await decryptJson(row.value)) } as never)
+        .where(eq(sealed.id, row.id));
+    }
+    done += rows.length;
+  }
+  return done;
 }
 
 function staleSubmissions(version: number): SQL {
@@ -301,11 +366,12 @@ export async function pendingReencryption(): Promise<ReencryptStatus> {
     .select({ value: count() })
     .from(documentDrafts)
     .where(notOnVersion(documentDrafts.valuesEncrypted, version));
+  const sealedText = await countSealedText((column) => notOnVersion(column, version));
   return {
     activeVersion: version,
     pending: {
       submissions: s?.value ?? 0,
-      documents: (d?.value ?? 0) + (dr?.value ?? 0),
+      documents: (d?.value ?? 0) + (dr?.value ?? 0) + sealedText,
       users: u?.value ?? 0,
       parties: p?.value ?? 0,
       conflictChecks: c?.value ?? 0,
@@ -656,9 +722,11 @@ async function reencryptBatch(): Promise<ReencryptCounts> {
       .where(eq(supportTicketMessages.id, row.id));
   }
 
+  const sealedText = await reencryptSealedText(version);
+
   return {
     submissions: subs.length,
-    documents: docs.length + drafts.length,
+    documents: docs.length + drafts.length + sealedText,
     users: people.length,
     parties: partyRows.length,
     conflictChecks: checks.length,
@@ -911,6 +979,7 @@ export async function pruneRetiredKeys(): Promise<number[]> {
       stk,
       stm,
       dft,
+      { value: await countSealedText((column) => sql`${column} like ${prefix}`) },
     ].some((row) => row?.value);
     if (!inUse) {
       await deleteKey(key.id);

@@ -176,6 +176,13 @@
       "when": 1794861060741,
       "tag": "0024_document_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794992415465,
+      "tag": "0025_encrypt_free_text",
+      "breakpoints": true
     }
   ]
 }

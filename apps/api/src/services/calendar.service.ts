@@ -36,6 +36,7 @@ import { actorName, type Actor } from '../lib/actor';
 import { iso, isoOrNull, FIRM_TIME_ZONE } from '../lib/time';
 import { calendarEventSchema, calendarEventUpdateSchema, parse } from '../validation/schemas';
 import { decryptJson, encryptJson } from './privacy.service';
+import { sealedNotice } from './notifications.service';
 import { getFirmBrand } from '../config/brand';
 import { firmOrigin } from './firm.service';
 import { sendMail } from './mail.service';
@@ -536,17 +537,18 @@ export async function notifyMatterTeam(notice: TeamNotice): Promise<number> {
         .where(and(inArray(users.id, extra), eq(users.isActive, true), ne(users.role, 'support')))
     : [];
   for (const person of [...team, ...others]) {
-    await db().insert(notifications).values({
-      title: notice.subject,
-      body: notice.body,
-      category: 'calendar',
-      priority: notice.priority,
-      recipientRole: person.role,
-      recipientUserId: person.id,
-      relatedEntityType: notice.entityType,
-      relatedEntityId: notice.entityId,
-      createdBy: 'system',
-    });
+    await db()
+      .insert(notifications)
+      .values({
+        ...(await sealedNotice(notice.subject, notice.body)),
+        category: 'calendar',
+        priority: notice.priority,
+        recipientRole: person.role,
+        recipientUserId: person.id,
+        relatedEntityType: notice.entityType,
+        relatedEntityId: notice.entityId,
+        createdBy: 'system',
+      });
     const sent = await sendMail({
       to: person.email,
       subject: `${brand.firmName}: ${notice.subject}`,

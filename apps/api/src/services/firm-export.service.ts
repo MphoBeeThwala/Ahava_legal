@@ -10,7 +10,9 @@ import { withTenant } from '../db/tenant';
 import * as schema from '../db/schema';
 import type { FirmRow } from '../db/schema';
 import { decryptJson } from './privacy.service';
-import { readSealedContent } from './documents.service';
+import { documentMeta, readSealedContent } from './documents.service';
+import { matterTitle } from './intake.service';
+import { unseal } from './sealed-text';
 import { readSealedFica } from './fica.service';
 import * as auditService from './audit.service';
 
@@ -18,12 +20,9 @@ import * as auditService from './audit.service';
 const PLAIN_TABLES: Record<string, PgTable> = {
   counters: schema.counters,
   assessments: schema.assessments,
-  cases: schema.cases,
   caseMembers: schema.caseMembers,
   caseExclusions: schema.caseExclusions,
   caseParties: schema.caseParties,
-  caseTasks: schema.caseTasks,
-  caseTimeline: schema.caseTimeline,
   invoicePayments: schema.invoicePayments,
   ledgerEntries: schema.ledgerEntries,
   staffRates: schema.staffRates,
@@ -33,10 +32,8 @@ const PLAIN_TABLES: Record<string, PgTable> = {
   subscriptionCheckouts: schema.subscriptionCheckouts,
   subscriptionPayments: schema.subscriptionPayments,
   matterRates: schema.matterRates,
-  notifications: schema.notifications,
   auditEvents: schema.auditEvents,
   auditAnchors: schema.auditAnchors,
-  reportSnapshots: schema.reportSnapshots,
   complianceRequests: schema.complianceRequests,
 };
 
@@ -322,8 +319,53 @@ export async function exportFirm(firm: FirmRow): Promise<FirmExport> {
             contentKeyVersion: _v,
             ...rest
           } = row;
-          return { ...rest, content: await decryptJson(await readSealedContent(row)) };
+          const { metaEncrypted: _meta, ...plain } = rest;
+          const meta = await documentMeta(row);
+          return {
+            ...plain,
+            title: meta.title,
+            contentPreview: meta.preview,
+            content: await decryptJson(await readSealedContent(row)),
+          };
         }),
+      );
+
+      // Free text stored encrypted: exported decrypted, as the fields they replace.
+      tables.cases = await Promise.all(
+        (await db().select().from(schema.cases)).map(async ({ titleEncrypted: _t, ...row }) => ({
+          ...row,
+          title: await matterTitle({ title: row.title, titleEncrypted: _t }),
+        })),
+      );
+      tables.caseTasks = await Promise.all(
+        (await db().select().from(schema.caseTasks)).map(async ({ contentEncrypted, ...row }) => ({
+          ...row,
+          ...(await unseal(contentEncrypted, { title: row.title, description: row.description })),
+        })),
+      );
+      tables.caseTimeline = await Promise.all(
+        (await db().select().from(schema.caseTimeline)).map(
+          async ({ contentEncrypted, ...row }) => ({
+            ...row,
+            ...(await unseal(contentEncrypted, { message: row.message })),
+          }),
+        ),
+      );
+      tables.notifications = await Promise.all(
+        (await db().select().from(schema.notifications)).map(
+          async ({ contentEncrypted, ...row }) => ({
+            ...row,
+            ...(await unseal(contentEncrypted, { title: row.title, body: row.body })),
+          }),
+        ),
+      );
+      tables.reportSnapshots = await Promise.all(
+        (await db().select().from(schema.reportSnapshots)).map(
+          async ({ titleEncrypted, ...row }) => ({
+            ...row,
+            ...(await unseal(titleEncrypted, { title: row.title })),
+          }),
+        ),
       );
 
       await auditService.logEvent(

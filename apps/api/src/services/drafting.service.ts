@@ -23,7 +23,7 @@ import { fieldIssues } from '../drafting/fields';
 import { renderDocx, renderPdf, renderText } from '../drafting/model';
 import type { DraftContext, DraftTemplate } from '../drafting/template';
 import { billingSettings, profileSettings } from './firm-settings.service';
-import { findCaseByRef } from './intake.service';
+import { findCaseByRef, matterTitle } from './intake.service';
 import { decryptJson, encryptJson } from './privacy.service';
 import * as auditService from './audit.service';
 import * as documentsService from './documents.service';
@@ -111,7 +111,7 @@ async function prefill(template: DraftTemplate, matter: CaseRow, ctx: DraftConte
     'client.phone': client.phone,
     'client.address': client.address,
     'matter.caseNumber': matter.caseNumber,
-    'matter.title': matter.title ?? '',
+    'matter.title': (await matterTitle(matter)) ?? '',
     'firm.legalName': ctx.firm.legalName,
     'firm.address': ctx.firm.address,
     'firm.email': ctx.firm.email,

@@ -43,6 +43,7 @@ import * as auditService from './audit.service';
 import * as partyService from './party.service';
 import * as ficaService from './fica.service';
 import * as billingService from './billing.service';
+import { documentMeta } from './documents.service';
 import { indexEntries } from './party-index';
 import type { PartyRecord } from '@ahava88/shared';
 import { currentFirm } from '../db/tenant-context';
@@ -334,22 +335,27 @@ export async function buildDataExport(query: unknown): Promise<ComplianceExport>
       ])
     : [[], [], [], []];
 
-  const exportDocuments: DocumentRecord[] = documentRows.map((row) => ({
-    id: row.id,
-    caseId: row.caseId,
-    caseNumber: row.caseNumber,
-    clientLabel: row.clientLabel,
-    title: row.title,
-    documentType: row.documentType,
-    status: row.status,
-    tags: row.tags,
-    contentPreview: row.contentPreview,
-    createdBy: row.createdBy,
-    createdAt: iso(row.createdAt),
-    updatedAt: iso(row.updatedAt),
-    signedAt: isoOrNull(row.signedAt),
-    content: null,
-  }));
+  const exportDocuments: DocumentRecord[] = await Promise.all(
+    documentRows.map(async (row) => {
+      const meta = await documentMeta(row);
+      return {
+        id: row.id,
+        caseId: row.caseId,
+        caseNumber: row.caseNumber,
+        clientLabel: row.clientLabel,
+        title: meta.title,
+        documentType: row.documentType,
+        status: row.status,
+        tags: row.tags,
+        contentPreview: meta.preview,
+        createdBy: row.createdBy,
+        createdAt: iso(row.createdAt),
+        updatedAt: iso(row.updatedAt),
+        signedAt: isoOrNull(row.signedAt),
+        content: null,
+      };
+    }),
+  );
   const exportInvoices: Invoice[] = await billingService.presentInvoices(invoiceRows);
   const exportLedger: LedgerEntry[] = ledgerRows.map((row) => ({
     id: row.id,
