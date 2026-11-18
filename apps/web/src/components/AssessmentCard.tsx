@@ -1,4 +1,5 @@
 import type { Assessment, PublicSubmission } from '@ahava88/shared';
+import CriminalAssessmentView from './CriminalAssessmentView';
 
 function ensureStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -68,11 +69,18 @@ function AssessmentCard({ matter, onGoToIntake, onGoToCases }: AssessmentCardPro
         {assessment.summary || matter.summary || 'The matter has not been assessed yet.'}
       </p>
 
-      <Section title="Key facts" items={assessment.keyFacts} />
-      <Section title="Attorney questions" items={assessment.attorneyQuestions} />
-      <Section title="Recommended documents" items={assessment.recommendedDocuments} />
-      <Section title="Compliance flags" items={assessment.complianceFlags} />
-      <Section title="Next actions" items={assessment.nextActions} />
+      {assessment.criminal ? (
+        // The merit assessment replaces the generic triage lists.
+        <CriminalAssessmentView assessment={assessment.criminal} />
+      ) : (
+        <>
+          <Section title="Key facts" items={assessment.keyFacts} />
+          <Section title="Attorney questions" items={assessment.attorneyQuestions} />
+          <Section title="Recommended documents" items={assessment.recommendedDocuments} />
+          <Section title="Compliance flags" items={assessment.complianceFlags} />
+          <Section title="Next actions" items={assessment.nextActions} />
+        </>
+      )}
 
       <div className="assessment-footer">
         <div>

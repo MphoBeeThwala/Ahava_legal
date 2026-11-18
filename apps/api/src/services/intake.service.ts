@@ -3,6 +3,7 @@
 
 import { and, count, desc, eq, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
 import type {
+  CriminalAssessment,
   IntakeSummary,
   MatterCase,
   MatterCaseSummary,
@@ -27,7 +28,9 @@ import { httpError } from '../lib/http';
 import { SYSTEM_ACTOR, type Actor } from '../lib/actor';
 import { iso } from '../lib/time';
 import { intakeSubmissionSchema, parse, type IntakeSubmission } from '../validation/schemas';
+import { aiConfigured } from '../lib/ai-client';
 import { ensureStringArray, triage, type TriageInput } from './ai.service';
+import { assessCriminalMatter, isCriminalMatter } from './criminal-assessment';
 import { deidentify, type KnownPerson } from './deidentify';
 import { blindIndex, blindIndexCandidates, decryptJson, encryptJson } from './privacy.service';
 import * as auditService from './audit.service';
@@ -110,11 +113,14 @@ export async function toMatterCase(row: CaseRow): Promise<MatterCase> {
   };
 }
 
-function toPublicSubmission(
+async function toPublicSubmission(
   submission: SubmissionRow,
   assessment: AssessmentRow | null = null,
   caseRecord: CaseRow | null = null,
-): PublicSubmission {
+): Promise<PublicSubmission> {
+  const criminal = assessment?.criminalEncrypted
+    ? await decryptJson<CriminalAssessment>(assessment.criminalEncrypted)
+    : null;
   return {
     id: submission.id,
     clientLabel: submission.clientLabel,
@@ -139,6 +145,7 @@ function toPublicSubmission(
       provider: assessment.provider,
       popiaNotes: ensureStringArray(assessment.popiaNotes),
       createdAt: iso(assessment.createdAt),
+      criminal,
     },
     matterCase: caseRecord && toCaseSummary(caseRecord),
   };
@@ -206,7 +213,9 @@ export async function createSubmission(
 
 export async function listSubmissions(limit = 100): Promise<PublicSubmission[]> {
   const rows = await selectSubmissions(undefined, limit);
-  return rows.map((row) => toPublicSubmission(row.submission, row.assessment, row.matterCase));
+  return Promise.all(
+    rows.map((row) => toPublicSubmission(row.submission, row.assessment, row.matterCase)),
+  );
 }
 
 export async function getSubmission(id: string): Promise<PublicSubmission | null> {
@@ -245,7 +254,9 @@ export async function findSubmissionsByEmail(email: string): Promise<PublicSubmi
     inArray(submissions.emailLookup, await blindIndexCandidates(normalized)),
     1_000,
   );
-  return rows.map((row) => toPublicSubmission(row.submission, row.assessment, row.matterCase));
+  return Promise.all(
+    rows.map((row) => toPublicSubmission(row.submission, row.assessment, row.matterCase)),
+  );
 }
 
 /**
@@ -268,8 +279,19 @@ export async function assessSubmission(id: string, actor: Actor = {}): Promise<P
     subjectId: id,
     actor,
   });
+  // Criminal matters also get the count-by-count merit assessment (same
+  // de-identified brief; only with consent and a configured model).
+  const criminal =
+    raw.consentToAi !== false &&
+    aiConfigured() &&
+    isCriminalMatter(raw.practiceArea, result.matterType)
+      ? await assessCriminalMatter(brief.text, { subjectType: 'submission', subjectId: id, actor })
+      : null;
+  const criminalEncrypted = criminal ? await encryptJson(criminal) : null;
   const nextAction =
-    result.nextActions?.[0] || 'Attorney to review the intake and confirm next steps.';
+    criminal?.strategy.immediatePreservation[0] ||
+    result.nextActions?.[0] ||
+    'Attorney to review the intake and confirm next steps.';
   const caseNumber = existing.matterCase ? null : await nextCaseNumber();
 
   const { submission, assessment, matterCase, created } = await db().transaction(async (tx) => {
@@ -288,6 +310,7 @@ export async function assessSubmission(id: string, actor: Actor = {}): Promise<P
       confidence: Number.isFinite(result.confidence) ? result.confidence : 0,
       popiaNotes: ensureStringArray(result.popiaNotes),
       rawRedactedBrief: brief as unknown as Record<string, unknown>,
+      criminalEncrypted,
     };
     const [savedAssessment] = await tx
       .insert(assessments)
@@ -430,7 +453,7 @@ export async function getSummary(): Promise<IntakeSummary> {
     encryptedStorage: true,
     popiaCompliantAi: true,
     latestIntake: latest
-      ? toPublicSubmission(latest.submission, latest.assessment, latest.matterCase)
+      ? await toPublicSubmission(latest.submission, latest.assessment, latest.matterCase)
       : null,
   };
 }

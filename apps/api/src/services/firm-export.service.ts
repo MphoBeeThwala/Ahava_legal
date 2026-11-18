@@ -19,7 +19,6 @@ import * as auditService from './audit.service';
 /** Tables exported as they are (all rows of the firm). */
 const PLAIN_TABLES: Record<string, PgTable> = {
   counters: schema.counters,
-  assessments: schema.assessments,
   caseMembers: schema.caseMembers,
   caseExclusions: schema.caseExclusions,
   caseParties: schema.caseParties,
@@ -75,6 +74,14 @@ export async function exportFirm(firm: FirmRow): Promise<FirmExport> {
         lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
       }));
+
+      const assessmentRows = await db().select().from(schema.assessments);
+      tables.assessments = await Promise.all(
+        assessmentRows.map(async ({ criminalEncrypted, ...rest }) => ({
+          ...rest,
+          criminal: criminalEncrypted ? await decryptJson(criminalEncrypted) : null,
+        })),
+      );
 
       const submissions = await db().select().from(schema.submissions);
       tables.submissions = await Promise.all(

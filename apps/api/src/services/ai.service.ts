@@ -17,6 +17,7 @@ import { HttpError, httpError } from '../lib/http';
 import type { Actor } from '../lib/actor';
 import { encryptJson } from './privacy.service';
 import { deidentify, type KnownPerson } from './deidentify';
+import { alreadyAnswered } from './answered-facts';
 
 export type AiPurpose = 'triage' | 'research' | 'evaluation';
 
@@ -187,6 +188,9 @@ const TRIAGE_SYSTEM = [
   'You receive a de-identified intake: people appear as tokens such as [Client]; keep the tokens as they are and do not guess who anyone is.',
   'This is triage for the attorney, not legal advice and not a legal opinion: do not state what the law is or cite authority.',
   'Point out facts that suggest deadlines (prescription, court dates, notice periods) so the attorney checks them.',
+  'Never ask the attorney for a fact the intake already gives (dates, amounts, previous convictions, the court, the charges); ask only what is genuinely unknown and material.',
+  'complianceFlags: only flags that matter for this matter (deadlines, conflicts, FICA, privilege); no generic POPIA or administrative boilerplate.',
+  'In a criminal matter never suggest that a charged client give SAPS a warning statement or affidavit.',
   'Answer with one JSON object and nothing else, with keys:',
   'matterType (string), urgency ("critical" | "high" | "medium" | "low"), summary (string, at most 120 words),',
   'keyFacts (string[]), attorneyQuestions (string[]), recommendedDocuments (string[]),',
@@ -266,7 +270,9 @@ export async function triage(
       urgency: URGENCIES.includes(urgency) ? urgency : 'medium',
       summary: String(parsed.summary ?? '').slice(0, 2000),
       keyFacts: ensureStringArray(parsed.keyFacts),
-      attorneyQuestions: ensureStringArray(parsed.attorneyQuestions),
+      attorneyQuestions: ensureStringArray(parsed.attorneyQuestions).filter(
+        (question) => !alreadyAnswered(question, brief.text),
+      ),
       recommendedDocuments: ensureStringArray(parsed.recommendedDocuments),
       complianceFlags: ensureStringArray(parsed.complianceFlags),
       nextActions: ensureStringArray(parsed.nextActions),

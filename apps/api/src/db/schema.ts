@@ -1115,6 +1115,8 @@ export const assessments = pgTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default({}),
+    /** Criminal matters: the merit assessment (CriminalAssessment), encrypted. */
+    criminalEncrypted: text('criminal_encrypted'),
     ...timestamps,
   },
   () => [
