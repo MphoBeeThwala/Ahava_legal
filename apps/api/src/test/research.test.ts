@@ -55,6 +55,8 @@ const intake = {
   requestedOutcome: 'Thandiwe wants to be let back in.',
   consentToAi: true,
   consentToStorage: true,
+  // These tests take the same intake more than once on purpose.
+  allowDuplicate: true,
 };
 
 beforeAll(async () => {

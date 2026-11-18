@@ -4,16 +4,23 @@ import type { Response } from 'express';
 /** An error that carries the HTTP status the API should answer with. */
 export class HttpError extends Error {
   readonly statusCode: number;
+  /** Extra fields for the client (4xx only); never personal information. */
+  readonly details?: Record<string, unknown>;
 
-  constructor(message: string, statusCode = 500) {
+  constructor(message: string, statusCode = 500, details?: Record<string, unknown>) {
     super(message);
     this.name = 'HttpError';
     this.statusCode = statusCode;
+    this.details = details;
   }
 }
 
-export function httpError(message: string, statusCode: number): HttpError {
-  return new HttpError(message, statusCode);
+export function httpError(
+  message: string,
+  statusCode: number,
+  details?: Record<string, unknown>,
+): HttpError {
+  return new HttpError(message, statusCode, details);
 }
 
 export function errorStatus(error: unknown, fallback = 500): number {
@@ -54,7 +61,8 @@ export function describeError(error: unknown): string {
 export function sendError(res: Response, error: unknown): void {
   const status = errorStatus(error);
   if (status < 500) {
-    res.status(status).json({ message: errorMessage(error) });
+    const details = error instanceof HttpError ? error.details : undefined;
+    res.status(status).json({ ...details, message: errorMessage(error) });
     return;
   }
   const requestId = res.req?.requestId;

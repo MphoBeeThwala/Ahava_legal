@@ -21,6 +21,8 @@ const PERSON = {
   matterSummary: 'Dismissed after a disciplinary hearing; wants to challenge it.',
   consentToAi: true,
   consentToStorage: true,
+  // These tests take the same intake more than once on purpose.
+  allowDuplicate: true,
 };
 
 async function intake(staff: TestStaff, body: object, host?: string) {

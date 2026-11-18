@@ -746,6 +746,8 @@ export interface IntakeSubmissionInput {
   documentsMentioned?: string;
   /** Criminal matters: the charge sheet (J15) as typed or pasted. */
   chargeSheet?: string;
+  /** Take the intake even though it looks like one already on record (after a 409). */
+  allowDuplicate?: boolean;
   urgencyHint?: string;
   preferredLanguage?: string;
   consentToAi: boolean;

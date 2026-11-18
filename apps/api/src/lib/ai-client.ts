@@ -205,7 +205,9 @@ class ChatCompletionsClient implements AiClient {
       { authorization: `Bearer ${this.key}` },
       {
         model,
-        max_tokens: request.maxTokens,
+        // deepseek-chat accepts at most 8192 output tokens.
+        max_tokens:
+          this.provider === 'deepseek' ? Math.min(request.maxTokens, 8192) : request.maxTokens,
         temperature: request.temperature ?? 0,
         messages: [{ role: 'system', content: request.system }, ...request.messages],
         // Gemini's thinking counts against max_tokens; keep it short so the answer fits.

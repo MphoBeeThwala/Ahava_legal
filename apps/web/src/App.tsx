@@ -213,6 +213,23 @@ function BrandMark({ branding }: { branding: PublicBranding }) {
   );
 }
 
+interface DuplicateIntake {
+  submissionId: string;
+  clientLabel: string;
+  caseNumber: string | null;
+  createdAt: string;
+  identical: boolean;
+}
+
+/** The existing intake a 409 from POST /intake/submissions names, if any. */
+function duplicateOf(error: unknown): DuplicateIntake | null {
+  if (apiStatus(error) !== 409) {
+    return null;
+  }
+  const body = (error as { response?: { data?: { duplicate?: DuplicateIntake } } }).response?.data;
+  return body?.duplicate ?? null;
+}
+
 function App() {
   const branding = useBranding();
   const [currentUser, setCurrentUser] = useState<PublicUser | null>(null);
@@ -241,6 +258,10 @@ function App() {
   // latest one on record; it clears when a new intake is started.
   const [intakeResult, setIntakeResult] = useState<PublicSubmission | null>(null);
   const intakeResultId = useRef<string | null>(null);
+  const [pendingDuplicate, setPendingDuplicate] = useState<{
+    payload: IntakeSubmissionInput;
+    duplicate: DuplicateIntake;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
@@ -433,57 +454,67 @@ function App() {
     });
   };
 
+  // While an assessment shown on screen is running, check it every 3 seconds
+  // and show the result (or the failure) as soon as it is ready, wherever it
+  // is shown. The server reports a job that died as failed after 10 minutes,
+  // which also ends the polling.
+  const runningIds = [intakeResult, selectedMatter]
+    .filter((item): item is PublicSubmission =>
+      Boolean(item && 'assessmentJob' in item && item.assessmentJob?.state === 'running'),
+    )
+    .map((item) => item.id);
+  const runningKey = [...new Set(runningIds)].join(',');
+  useEffect(() => {
+    if (!runningKey) {
+      return undefined;
+    }
+    let stopped = false;
+    const timer = window.setInterval(async () => {
+      for (const id of runningKey.split(',')) {
+        let latest: PublicSubmission;
+        try {
+          latest = (await api.get<PublicSubmission>(`/intake/submissions/${id}`)).data;
+        } catch {
+          continue; // A dropped check is tried again next time.
+        }
+        if (stopped || latest.assessmentJob?.state === 'running') {
+          continue;
+        }
+        setIntakeResult((current) => (current?.id === id ? latest : current));
+        setSelectedMatter((current) => (current?.id === id ? latest : current));
+        if (latest.assessmentJob?.state === 'failed') {
+          setAuthNotice({
+            tone: 'error',
+            message: latest.assessmentJob.error || 'The assessment failed. Please try again.',
+          });
+        } else {
+          setAuthNotice({
+            tone: 'success',
+            message: `Assessment ready for ${latest.clientLabel}.`,
+          });
+          void loadWorkspace().catch(() => undefined);
+        }
+      }
+    }, 3000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runningKey]);
+
   const showIntakeResult = (submission: PublicSubmission | null) => {
     intakeResultId.current = submission?.id ?? null;
     setIntakeResult(submission);
   };
 
-  // Polls a background assessment until it finishes or fails (up to 8 minutes).
-  const followAssessment = async (id: string) => {
-    for (let attempt = 0; attempt < 160; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      if (intakeResultId.current !== id) {
-        return; // A new intake was started; this one finishes in the background.
-      }
-      let latest: PublicSubmission;
-      try {
-        latest = (await api.get<PublicSubmission>(`/intake/submissions/${id}`)).data;
-      } catch {
-        continue; // A dropped poll is retried.
-      }
-      if (intakeResultId.current !== id) {
-        return;
-      }
-      if (latest.assessmentJob?.state === 'running') {
-        continue;
-      }
-      setIntakeResult(latest);
-      if (latest.assessmentJob?.state === 'failed') {
-        setAuthNotice({
-          tone: 'error',
-          message: latest.assessmentJob.error || 'The assessment failed. Please try again.',
-        });
-        return;
-      }
-      setSelectedMatter(latest);
-      setSelectedCaseId(latest.matterCase?.id || latest.matterCase?.submissionId || latest.id);
-      setAuthNotice({ tone: 'success', message: 'Assessment ready.' });
-      await loadWorkspace().catch(() => undefined);
-      return;
-    }
-    setAuthNotice({
-      tone: 'error',
-      message: 'The assessment is taking unusually long. Check the matter under Cases shortly.',
-    });
-  };
-
-  const startAssessment = async (id: string) => {
+  const startAssessment = async (id: string, force = false) => {
     const started = await api.post<PublicSubmission>(
-      `/intake/submissions/${id}/assess?background=1`,
+      `/intake/submissions/${id}/assess?background=1${force ? '&force=1' : ''}`,
     );
     showIntakeResult(started.data);
-    if (started.data.assessmentJob?.state === 'running') {
-      void followAssessment(id);
+    if (selectedMatter?.id === id) {
+      setSelectedMatter(started.data);
     }
   };
 
@@ -517,6 +548,13 @@ function App() {
       }
       return true;
     } catch (error) {
+      const duplicate = duplicateOf(error);
+      if (duplicate) {
+        // Keep the form as typed; the attorney decides.
+        setPendingDuplicate({ payload, duplicate });
+        setAuthNotice({ tone: 'warn', message: 'This looks like an intake already on record.' });
+        return false;
+      }
       setAuthNotice({
         tone: 'error',
         message: apiErrorMessage(error, 'Unable to submit intake.'),
@@ -527,9 +565,22 @@ function App() {
     }
   };
 
+  const openDuplicate = async (id: string) => {
+    setPendingDuplicate(null);
+    try {
+      const existing = await api.get<PublicSubmission>(`/intake/submissions/${id}`);
+      showIntakeResult(existing.data);
+    } catch (error) {
+      setAuthNotice({
+        tone: 'error',
+        message: apiErrorMessage(error, 'Could not open the existing intake.'),
+      });
+    }
+  };
+
   const retryAssessment = async (id: string) => {
     try {
-      await startAssessment(id);
+      await startAssessment(id, true);
       setAuthNotice({ tone: 'info', message: 'Running the assessment again...' });
     } catch (error) {
       setAuthNotice({
@@ -540,6 +591,7 @@ function App() {
   };
 
   const clearIntakeResult = () => {
+    setPendingDuplicate(null);
     if (intakeResultId.current !== null) {
       showIntakeResult(null);
     }
@@ -653,6 +705,7 @@ function App() {
           matter={selectedMatter}
           onGoToIntake={() => showSection('intake')}
           onGoToCases={() => showSection('cases')}
+          onRetry={retryAssessment}
         />
       </ErrorBoundary>
     );
@@ -821,13 +874,53 @@ function App() {
                   </div>
                 </div>
                 {can('intake.write') ? (
-                  <IntakeForm
-                    onSubmit={handleSubmit}
-                    onEdit={clearIntakeResult}
-                    busy={busy}
-                    sampleMatter={sampleMatter}
-                    onGoToCases={() => showSection('cases')}
-                  />
+                  <>
+                    {pendingDuplicate ? (
+                      <div className="notice notice-warn duplicate-notice" role="alert">
+                        <p>
+                          {pendingDuplicate.duplicate.identical
+                            ? 'This intake is already on record'
+                            : 'This client already has a recent intake in this practice area'}{' '}
+                          ({pendingDuplicate.duplicate.clientLabel}
+                          {pendingDuplicate.duplicate.caseNumber
+                            ? `, ${pendingDuplicate.duplicate.caseNumber}`
+                            : ''}
+                          , taken{' '}
+                          {new Date(pendingDuplicate.duplicate.createdAt).toLocaleString('en-ZA')}).
+                          Taking it again creates a second matter and runs a second assessment.
+                        </p>
+                        <div className="duplicate-actions">
+                          <button
+                            type="button"
+                            className="primary-button"
+                            onClick={() =>
+                              void openDuplicate(pendingDuplicate.duplicate.submissionId)
+                            }
+                          >
+                            Open the existing intake
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => {
+                              const { payload } = pendingDuplicate;
+                              setPendingDuplicate(null);
+                              void handleSubmit({ ...payload, allowDuplicate: true });
+                            }}
+                          >
+                            It is a different matter: take it anyway
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                    <IntakeForm
+                      onSubmit={handleSubmit}
+                      onEdit={clearIntakeResult}
+                      busy={busy}
+                      sampleMatter={sampleMatter}
+                      onGoToCases={() => showSection('cases')}
+                    />
+                  </>
                 ) : (
                   <p className="field-hint">Your role can view matters but not take new intakes.</p>
                 )}

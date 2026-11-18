@@ -31,7 +31,6 @@ import {
   type PracticeAreaId,
   type StrategyAssessment,
 } from '@ahava88/shared';
-import { parseJsonAnswer } from '../lib/ai-client';
 import {
   CARTRIDGES,
   detectPracticeArea,
@@ -40,7 +39,7 @@ import {
   type StrategyCartridge,
 } from '../lib/legal-strategies';
 import { parseDate } from '../drafting/days';
-import { callModel, type CallContext } from './ai.service';
+import { callModelForJson, type CallContext } from './ai.service';
 import { alreadyAnswered } from './answered-facts';
 import { retrieveSources, sourceText } from './research-run';
 
@@ -446,7 +445,7 @@ export async function assessStrategy(
   const call = { ...context, purpose: 'triage' as const };
   const cartridges = [detection.primary, ...detection.secondary].map((id) => CARTRIDGES[id]);
   const areas = `Practice areas: ${cartridges.map((c) => c.label).join('; ')}`;
-  const plan = await callModel(
+  const { value: planned } = await callModelForJson<{ items?: unknown; queries?: unknown }>(
     {
       model: 'research',
       system: PLAN_SYSTEM,
@@ -456,7 +455,6 @@ export async function assessStrategy(
     },
     call,
   );
-  const planned = parseJsonAnswer<{ items?: unknown; queries?: unknown }>(plan.text);
   const items = (Array.isArray(planned.items) ? planned.items : []).map(String).slice(0, 12);
   const queries = [
     ...new Set(
@@ -473,7 +471,7 @@ export async function assessStrategy(
   const passages = sources.length
     ? `Source passages:\n\n${sources.map(sourceText).join('\n\n')}`
     : 'Source passages: none were found in the approved sources.';
-  const result = await callModel(
+  const { result, value } = await callModelForJson<unknown>(
     {
       model: 'research',
       system: strategySystemPrompt(detection.primary, detection.secondary),
@@ -491,12 +489,13 @@ export async function assessStrategy(
             .join('\n\n'),
         },
       ],
-      maxTokens: 8000,
+      // Long enough for a full matrix; providers with a lower limit are capped.
+      maxTokens: 12000,
       temperature: 0,
     },
     call,
   );
-  const answer = strategyAnswerSchema.parse(parseJsonAnswer<unknown>(result.text));
+  const answer = strategyAnswerSchema.parse(value);
   return {
     ...guardStrategy(answer, detection, sources, brief),
     gaps: sources.length
