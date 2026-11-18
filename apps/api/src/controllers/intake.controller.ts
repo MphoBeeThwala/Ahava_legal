@@ -35,6 +35,11 @@ async function getSubmission(req: Request, res: Response) {
 
 async function assessSubmission(req: Request, res: Response) {
   try {
+    // ?background=1: start it and answer 202; the client polls the submission.
+    if (req.query.background === '1' || req.query.background === 'true') {
+      const started = await intakeService.startAssessment(String(req.params.id), req.auth);
+      return res.status(202).json(started);
+    }
     const assessment = await intakeService.assessSubmission(String(req.params.id), req.auth);
     res.status(200).json(assessment);
   } catch (error) {

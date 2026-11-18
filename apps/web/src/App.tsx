@@ -237,6 +237,10 @@ function App() {
   const [cases, setCases] = useState<MatterCase[]>([]);
   const [selectedMatter, setSelectedMatter] = useState<PublicSubmission | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  // The Intake screen shows only the intake taken in this visit, not the
+  // latest one on record; it clears when a new intake is started.
+  const [intakeResult, setIntakeResult] = useState<PublicSubmission | null>(null);
+  const intakeResultId = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
@@ -429,30 +433,88 @@ function App() {
     });
   };
 
+  const showIntakeResult = (submission: PublicSubmission | null) => {
+    intakeResultId.current = submission?.id ?? null;
+    setIntakeResult(submission);
+  };
+
+  // Polls a background assessment until it finishes or fails (up to 8 minutes).
+  const followAssessment = async (id: string) => {
+    for (let attempt = 0; attempt < 160; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      if (intakeResultId.current !== id) {
+        return; // A new intake was started; this one finishes in the background.
+      }
+      let latest: PublicSubmission;
+      try {
+        latest = (await api.get<PublicSubmission>(`/intake/submissions/${id}`)).data;
+      } catch {
+        continue; // A dropped poll is retried.
+      }
+      if (intakeResultId.current !== id) {
+        return;
+      }
+      if (latest.assessmentJob?.state === 'running') {
+        continue;
+      }
+      setIntakeResult(latest);
+      if (latest.assessmentJob?.state === 'failed') {
+        setAuthNotice({
+          tone: 'error',
+          message: latest.assessmentJob.error || 'The assessment failed. Please try again.',
+        });
+        return;
+      }
+      setSelectedMatter(latest);
+      setSelectedCaseId(latest.matterCase?.id || latest.matterCase?.submissionId || latest.id);
+      setAuthNotice({ tone: 'success', message: 'Assessment ready.' });
+      await loadWorkspace().catch(() => undefined);
+      return;
+    }
+    setAuthNotice({
+      tone: 'error',
+      message: 'The assessment is taking unusually long. Check the matter under Cases shortly.',
+    });
+  };
+
+  const startAssessment = async (id: string) => {
+    const started = await api.post<PublicSubmission>(
+      `/intake/submissions/${id}/assess?background=1`,
+    );
+    showIntakeResult(started.data);
+    if (started.data.assessmentJob?.state === 'running') {
+      void followAssessment(id);
+    }
+  };
+
   const handleSubmit = async (payload: IntakeSubmissionInput): Promise<boolean> => {
     setBusy(true);
+    showIntakeResult(null);
     setAuthNotice({
       tone: 'info',
-      message: 'Submitting encrypted intake and generating an attorney-facing assessment...',
+      message: payload.consentToAi
+        ? 'Submitting the encrypted intake and starting the assessment...'
+        : 'Submitting the encrypted intake...',
     });
 
     try {
       const submissionResponse = await api.post<PublicSubmission>('/intake/submissions', payload);
-      const assessmentResponse = await api.post<PublicSubmission>(
-        `/intake/submissions/${submissionResponse.data.id}/assess`,
-      );
-
-      setSelectedMatter(assessmentResponse.data);
-      setSelectedCaseId(
-        assessmentResponse.data.matterCase?.id ||
-          assessmentResponse.data.matterCase?.submissionId ||
-          assessmentResponse.data.id,
-      );
-      setAuthNotice({
-        tone: 'success',
-        message: `Intake ${submissionResponse.data.id} assessed successfully.`,
-      });
-      await loadWorkspace();
+      if (payload.consentToAi) {
+        await startAssessment(submissionResponse.data.id);
+        setAuthNotice({
+          tone: 'info',
+          message:
+            'Intake saved. The assessment is running; it usually takes one to three minutes.',
+        });
+      } else {
+        // Without AI consent the server records the intake without a model.
+        const assessed = await api.post<PublicSubmission>(
+          `/intake/submissions/${submissionResponse.data.id}/assess`,
+        );
+        showIntakeResult(assessed.data);
+        setAuthNotice({ tone: 'success', message: 'Intake saved.' });
+        await loadWorkspace();
+      }
       return true;
     } catch (error) {
       setAuthNotice({
@@ -462,6 +524,24 @@ function App() {
       return false;
     } finally {
       setBusy(false);
+    }
+  };
+
+  const retryAssessment = async (id: string) => {
+    try {
+      await startAssessment(id);
+      setAuthNotice({ tone: 'info', message: 'Running the assessment again...' });
+    } catch (error) {
+      setAuthNotice({
+        tone: 'error',
+        message: apiErrorMessage(error, 'Could not restart the assessment.'),
+      });
+    }
+  };
+
+  const clearIntakeResult = () => {
+    if (intakeResultId.current !== null) {
+      showIntakeResult(null);
     }
   };
 
@@ -743,6 +823,7 @@ function App() {
                 {can('intake.write') ? (
                   <IntakeForm
                     onSubmit={handleSubmit}
+                    onEdit={clearIntakeResult}
                     busy={busy}
                     sampleMatter={sampleMatter}
                     onGoToCases={() => showSection('cases')}
@@ -752,7 +833,15 @@ function App() {
                 )}
               </div>
             </div>
-            <aside className="secondary-column">{assessmentCard}</aside>
+            <aside className="secondary-column">
+              <ErrorBoundary label="Assessment">
+                <AssessmentCard
+                  matter={intakeResult}
+                  onGoToCases={() => showSection('cases')}
+                  onRetry={retryAssessment}
+                />
+              </ErrorBoundary>
+            </aside>
           </section>
         ) : null}
 

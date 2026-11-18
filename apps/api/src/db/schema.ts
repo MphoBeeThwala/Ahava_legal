@@ -1071,6 +1071,11 @@ export const submissions = pgTable(
     caseId: uuid('case_id').references((): AnyPgColumn => cases.id, { onDelete: 'set null' }),
     /** The person in the register this intake is about (a prospective client or a client). */
     partyId: uuid('party_id').references((): AnyPgColumn => parties.id, { onDelete: 'set null' }),
+    /** A background assessment: 'running' or 'failed' (null when none is pending). */
+    assessmentState: text('assessment_state'),
+    /** Why the last background assessment failed (a generic message; no client data). */
+    assessmentError: text('assessment_error'),
+    assessmentStartedAt: timestamp('assessment_started_at', { withTimezone: true }),
     ...updatable,
   },
   (t) => [

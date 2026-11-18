@@ -11,6 +11,8 @@ import type {
 } from '@ahava88/shared';
 import { db } from '../db/client';
 import { afterCommit, currentFirm } from '../db/tenant-context';
+import { setPrincipal, withTenant } from '../db/tenant';
+import { reportError } from '../lib/monitoring';
 import { firmContainer, objectStore } from './object-store';
 import { nextValue } from '../db/sequences';
 import {
@@ -24,7 +26,7 @@ import {
   type SubmissionRow,
 } from '../db/schema';
 import { getFirmBrand } from '../config/brand';
-import { httpError } from '../lib/http';
+import { HttpError, httpError } from '../lib/http';
 import { SYSTEM_ACTOR, type Actor } from '../lib/actor';
 import { iso } from '../lib/time';
 import { intakeSubmissionSchema, parse, type IntakeSubmission } from '../validation/schemas';
@@ -123,6 +125,7 @@ async function toPublicSubmission(
     ? await decryptJson<StrategyAssessment>(assessment.strategyEncrypted)
     : null;
   return {
+    assessmentJob: assessmentJob(submission),
     id: submission.id,
     clientLabel: submission.clientLabel,
     practiceArea: submission.practiceArea,
@@ -217,6 +220,88 @@ export async function listSubmissions(limit = 100): Promise<PublicSubmission[]> 
   return Promise.all(
     rows.map((row) => toPublicSubmission(row.submission, row.assessment, row.matterCase)),
   );
+}
+
+/** A background assessment still "running" after this long has died (restart or hang). */
+export const ASSESSMENT_STALE_MS = 10 * 60_000;
+
+function assessmentJob(submission: SubmissionRow): PublicSubmission['assessmentJob'] {
+  if (!submission.assessmentState || !submission.assessmentStartedAt) {
+    return null;
+  }
+  const startedAt = iso(submission.assessmentStartedAt);
+  if (submission.assessmentState === 'running') {
+    return Date.now() - submission.assessmentStartedAt.getTime() > ASSESSMENT_STALE_MS
+      ? {
+          state: 'failed',
+          error: 'The assessment stopped before it finished. Please run it again.',
+          startedAt,
+        }
+      : { state: 'running', error: null, startedAt };
+  }
+  return { state: 'failed', error: submission.assessmentError, startedAt };
+}
+
+/** Error text safe to store and show: our own messages only, never driver or provider detail. */
+function jobError(error: unknown): string {
+  return error instanceof HttpError
+    ? error.message.slice(0, 300)
+    : 'The assessment failed unexpectedly. Please try again.';
+}
+
+/**
+ * Starts the assessment in the background and answers at once (the AI calls
+ * take one to three minutes: longer than a browser or proxy should wait).
+ * The job runs after this request commits, in its own tenant transaction as
+ * the same user; the client polls getSubmission() for the result. A job
+ * already running is not started twice.
+ */
+export async function startAssessment(id: string, actor: Actor = {}): Promise<PublicSubmission> {
+  const [existing] = await selectSubmissions(eq(submissions.id, id), 1);
+  if (!existing) {
+    throw httpError('Intake submission not found', 404);
+  }
+  if (assessmentJob(existing.submission)?.state === 'running') {
+    return toPublicSubmission(existing.submission, existing.assessment, existing.matterCase);
+  }
+  const [marked] = await db()
+    .update(submissions)
+    .set({
+      assessmentState: 'running',
+      assessmentError: null,
+      assessmentStartedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(submissions.id, id))
+    .returning();
+
+  const firm = currentFirm();
+  const principal =
+    actor.userId && actor.role ? { id: actor.userId, role: String(actor.role) } : null;
+  const asUser = async <T>(fn: () => Promise<T>) =>
+    withTenant(firm, async () => {
+      if (principal) await setPrincipal(principal);
+      return fn();
+    });
+  afterCommit(async () => {
+    // Not awaited: the response must not wait for the AI.
+    void asUser(() => assessSubmission(id, actor)).catch(async (error: unknown) => {
+      if (!(error instanceof HttpError)) {
+        reportError(error, { path: 'intake.assess.background' });
+      }
+      await asUser(() =>
+        db()
+          .update(submissions)
+          .set({
+            assessmentState: 'failed',
+            assessmentError: jobError(error),
+            updatedAt: new Date(),
+          })
+          .where(eq(submissions.id, id)),
+      ).catch((stored: unknown) => reportError(stored, { path: 'intake.assess.background' }));
+    });
+  });
+  return toPublicSubmission(marked!, existing.assessment, existing.matterCase);
 }
 
 export async function getSubmission(id: string): Promise<PublicSubmission | null> {
@@ -376,7 +461,13 @@ export async function assessSubmission(id: string, actor: Actor = {}): Promise<P
 
     const [savedSubmission] = await tx
       .update(submissions)
-      .set({ status: 'assessed', caseId: savedCase?.id ?? null, updatedAt: new Date() })
+      .set({
+        status: 'assessed',
+        caseId: savedCase?.id ?? null,
+        assessmentState: null,
+        assessmentError: null,
+        updatedAt: new Date(),
+      })
       .where(eq(submissions.id, id))
       .returning();
 

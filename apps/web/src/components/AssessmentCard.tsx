@@ -23,9 +23,11 @@ interface AssessmentCardProps {
   matter: PublicSubmission | null;
   onGoToIntake?: () => void;
   onGoToCases?: () => void;
+  /** Runs the assessment again after a background run failed. */
+  onRetry?: (submissionId: string) => void;
 }
 
-function AssessmentCard({ matter, onGoToIntake, onGoToCases }: AssessmentCardProps) {
+function AssessmentCard({ matter, onGoToIntake, onGoToCases, onRetry }: AssessmentCardProps) {
   if (!matter) {
     return (
       <div className="panel assessment-panel">
@@ -46,6 +48,38 @@ function AssessmentCard({ matter, onGoToIntake, onGoToCases }: AssessmentCardPro
             </button>
           ) : null}
         </div>
+      </div>
+    );
+  }
+
+  const job = matter.assessmentJob;
+  if (job?.state === 'running') {
+    return (
+      <div className="panel assessment-panel" aria-busy="true">
+        <p className="panel-kicker">Assessment</p>
+        <h2>Assessing {matter.clientLabel || 'the intake'}…</h2>
+        <p className="muted" role="status">
+          The AI is reading the intake, searching the approved sources and checking its answer. This
+          usually takes one to three minutes; it will appear here when it is ready. You can keep
+          working in the meantime.
+        </p>
+      </div>
+    );
+  }
+  if (job?.state === 'failed') {
+    return (
+      <div className="panel assessment-panel">
+        <p className="panel-kicker">Assessment</p>
+        <h2>The assessment did not finish</h2>
+        <p className="notice notice-error" role="alert">
+          {job.error || 'The assessment failed. Please try again.'}
+        </p>
+        <p className="muted">The intake is saved; nothing was lost.</p>
+        {onRetry ? (
+          <button type="button" className="primary-button" onClick={() => onRetry(matter.id)}>
+            Run the assessment again
+          </button>
+        ) : null}
       </div>
     );
   }

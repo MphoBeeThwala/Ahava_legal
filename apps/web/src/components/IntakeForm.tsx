@@ -24,22 +24,26 @@ const defaultState: IntakeFormState = {
 
 interface IntakeFormProps {
   onSubmit: (payload: IntakeSubmissionInput) => Promise<boolean>;
+  /** Called when the user starts typing a new intake (clears the last assessment). */
+  onEdit?: () => void;
   busy: boolean;
   sampleMatter?: Partial<IntakeSubmissionInput>;
   onGoToCases?: () => void;
 }
 
-function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormProps) {
+function IntakeForm({ onSubmit, onEdit, busy, sampleMatter, onGoToCases }: IntakeFormProps) {
   const [form, setForm] = useState<IntakeFormState>(defaultState);
   const [status, setStatus] = useState<Notice | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
   const updateField = <K extends keyof IntakeFormState>(name: K, value: IntakeFormState[K]) => {
+    onEdit?.();
     setForm((current) => ({ ...current, [name]: value }));
   };
 
   const loadSample = () => {
+    onEdit?.();
     setForm({ ...defaultState, ...sampleMatter });
     setStatus({
       tone: 'info',
@@ -63,7 +67,7 @@ function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormPro
         setStatus({
           tone: 'success',
           message: withAi
-            ? 'Encrypted intake submitted and assessment completed.'
+            ? 'Encrypted intake submitted. The assessment is running and appears alongside when it is ready.'
             : 'Encrypted intake submitted. Not assessed by AI: the client did not consent.',
         });
       }
