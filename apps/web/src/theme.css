@@ -979,49 +979,86 @@ body,
   overflow-anchor: none;
 }
 
-/* Criminal merit assessment */
-.criminal-assessment {
+/* Strategy assessment (all practice areas) */
+.strategy-assessment {
   display: grid;
   gap: 14px;
   margin-top: 12px;
 }
-.criminal-heading {
+.strategy-heading {
   font-size: 0.95rem;
   margin: 10px 0 0;
 }
-.criminal-theory,
-.criminal-count,
-.criminal-issue,
-.criminal-phase {
+.strategy-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.strategy-domain-primary {
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  border-color: var(--brand-soft);
+  font-weight: 600;
+}
+.strategy-card {
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px 14px;
 }
-.criminal-theory p,
-.criminal-issue p {
+.strategy-card p {
   margin: 6px 0 0;
   color: var(--text-secondary);
 }
-.criminal-warnings {
+.strategy-deadlines {
+  background: var(--warn-bg);
+  border: 1px solid rgba(240, 180, 60, 0.22);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.strategy-deadlines ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.strategy-deadlines .deadline-overdue strong {
+  color: var(--err-fg);
+}
+.strategy-deadline-detail {
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+.strategy-warnings {
   background: var(--err-bg);
   border: 1px solid rgba(240, 90, 110, 0.22);
   border-radius: 10px;
   padding: 10px 14px;
   color: var(--err-fg);
 }
-.criminal-warnings ul,
-.criminal-phase ul,
-.criminal-removed ul {
+.strategy-warnings ul,
+.strategy-phase ul,
+.strategy-removed ul {
   margin: 6px 0 0;
   padding-left: 18px;
 }
-.criminal-ratings {
+.strategy-forum {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.strategy-forum dd {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+}
+.strategy-ratings {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.criminal-rating {
+.strategy-rating {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1031,58 +1068,61 @@ body,
   padding: 4px 4px 4px 12px;
   font-size: 0.85rem;
 }
-.criminal-facts {
+.strategy-facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
-.criminal-count {
+.strategy-merit {
   display: grid;
   gap: 8px;
-  overflow-x: auto;
 }
-.criminal-count p {
-  margin: 0;
-}
-.criminal-count-header {
+.strategy-merit-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
 }
-.criminal-elements {
+.strategy-table-wrap {
+  overflow-x: auto;
+}
+.strategy-elements {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
 }
-.criminal-elements th,
-.criminal-elements td {
+.strategy-elements th,
+.strategy-elements td {
   text-align: left;
   vertical-align: top;
   padding: 6px 8px;
   border-top: 1px solid var(--line);
   color: var(--text-secondary);
 }
-.criminal-elements thead th {
+.strategy-elements thead th {
   color: var(--text-muted);
   font-weight: 600;
 }
-.criminal-elements tbody th {
+.strategy-elements tbody th {
   color: var(--text-primary);
 }
-.criminal-authorities li {
-  margin-bottom: 4px;
+.strategy-authorities {
+  margin: 0;
+  padding-left: 18px;
 }
-.criminal-phases {
+.strategy-authorities li {
+  margin-bottom: 6px;
+}
+.strategy-phases {
   display: grid;
   gap: 10px;
   margin: 0;
   padding-left: 20px;
 }
-.criminal-removed summary {
+.strategy-removed summary {
   cursor: pointer;
   color: var(--text-muted);
 }
-.criminal-footnote {
+.strategy-footnote {
   font-size: 0.8rem;
 }

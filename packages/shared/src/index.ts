@@ -744,6 +744,8 @@ export interface IntakeSubmissionInput {
   matterSummary: string;
   requestedOutcome?: string;
   documentsMentioned?: string;
+  /** Criminal matters: the charge sheet (J15) as typed or pasted. */
+  chargeSheet?: string;
   urgencyHint?: string;
   preferredLanguage?: string;
   consentToAi: boolean;
@@ -765,79 +767,112 @@ export interface Assessment {
   provider: string;
   popiaNotes: string[];
   createdAt: string;
-  /** Criminal matters only: the count-by-count merit assessment. */
-  criminal?: CriminalAssessment | null;
+  /** The practice-area strategy assessment (criminal, labour, family, commercial, conveyancing, estates). */
+  strategy?: StrategyAssessment | null;
 }
 
-/** How likely the primary defence is to succeed on the facts known so far. */
+export const PRACTICE_AREAS = [
+  'criminal',
+  'labour',
+  'family',
+  'commercial',
+  'conveyancing',
+  'estates',
+] as const;
+export type PracticeAreaId = (typeof PRACTICE_AREAS)[number];
+
+export const PRACTICE_AREA_LABELS: Record<PracticeAreaId, string> = {
+  criminal: 'Criminal law',
+  labour: 'Labour law',
+  family: 'Family law',
+  commercial: 'Commercial and civil litigation',
+  conveyancing: 'Conveyancing and property',
+  estates: 'Deceased estates and trusts',
+};
+
+/** How likely a position is to succeed on the facts known so far. */
 export type DefenceViability = 'high' | 'moderate' | 'high-risk';
 
-/** An authority the assessment relies on. */
+/**
+ * Where an authority's support comes from:
+ * - verified: a retrieved passage from the approved sources names it;
+ * - curated: on the practice area's curated list (still to be read before relying on it);
+ * - unverified: named by the model alone; check before relying on it.
+ */
+export type AuthorityStatus = 'verified' | 'curated' | 'unverified';
+
 export interface AuthorityReference {
-  /** E.g. "S v Trainor" or "Criminal Procedure Act 51 of 1977, s 22(b)". */
+  /** E.g. "S v Trainor" or "Labour Relations Act 66 of 1995, s 191". */
   authority: string;
   /** The principle it is relied on for. */
   principle: string;
-  /** Retrieved passages (S1, S2...) that contain it. */
+  /** What it bears on (a charge, claim or issue). */
+  appliesTo: string;
+  /** Retrieved passages (S1, S2...) that name it. */
   sources: string[];
-  /** true: found in a retrieved passage. false: named from general knowledge; check before relying. */
-  verified: boolean;
+  status: AuthorityStatus;
 }
 
 export interface ElementAnalysis {
-  /** E.g. "Unlawfulness", "Intention (dolus)". */
+  /** E.g. "Unlawfulness", "Consensus", "Substantive fairness". */
   element: string;
-  /** What the State must prove. */
-  stateBurden: string;
-  /** What the client's version says about it. */
-  clientVersion: string;
+  /** Who must prove what, and to what standard. */
+  burden: string;
+  /** What our client's version or documents say about it. */
+  ourVersion: string;
   /** Where that leaves the element. */
   assessment: string;
 }
 
-export interface CountAssessment {
-  /** E.g. "Count 1: Assault with intent to do grievous bodily harm". */
-  count: string;
+export interface MeritItem {
+  /** E.g. "Count 1: Assault GBH", "Claim: unfair dismissal", "Transfer: suspensive bond condition". */
+  item: string;
+  kind: 'charge' | 'claim' | 'defence' | 'transaction' | 'issue';
   elements: ElementAnalysis[];
-  primaryDefence: string;
   viability: DefenceViability;
   viabilityReasoning: string;
-  /** Where the State will attack the client's version. */
-  prosecutionAttacks: string[];
-  /** Competent verdicts and fallback positions. */
-  competentVerdicts: string[];
-  /** Sentencing exposure: minimum sentences, court jurisdiction. */
-  sentencing: string;
-  authorities: AuthorityReference[];
+  /** Where the other side will attack. */
+  opposingAttackVectors: string[];
+  /** Competent verdicts, alternative claims, fallback positions. */
+  fallbackAlternatives: string[];
 }
 
-export interface ProceduralIssue {
-  issue: string;
-  analysis: string;
-  authorities: AuthorityReference[];
+export interface DeadlineAlert {
+  /** The rule (from the practice area's list when it matches one). */
+  ruleId: string | null;
+  rule: string;
+  /** The event that starts the period, e.g. "Date of dismissal". */
+  trigger: string;
+  triggerDate: string | null;
+  /** The last day; computed in code when the rule and trigger date are known. */
+  deadline: string | null;
+  /** true: computed by the app's date rules; false: as given by the model (check it). */
+  computed: boolean;
+  status: 'overdue' | 'urgent' | 'upcoming' | 'unknown';
+  authority: string;
+  note: string;
 }
 
-export interface CriminalAssessment {
-  caseTheory: string;
+export interface StrategyAssessment {
+  practiceArea: { primary: PracticeAreaId; secondary: PracticeAreaId[] };
+  forumAndJurisdiction: { forum: string; jurisdiction: string; burdenOfProof: string };
   factAudit: {
-    /** Taken as given from the intake or charge sheet. */
-    confirmed: string[];
-    /** Need objective corroboration (registers, OB entries, footage). */
-    corroborationNeeded: string[];
-    /** Genuinely unknown and material to the defence. */
-    criticalUnknowns: string[];
+    /** Taken as given from the intake, charge sheet or documents. */
+    confirmedFacts: string[];
+    /** Need objective proof. */
+    corroborationRequired: string[];
+    /** Genuinely unknown and material (never already in the intake). */
+    criticalGaps: string[];
   };
-  counts: CountAssessment[];
-  proceduralIssues: ProceduralIssue[];
-  strategy: {
-    /** 0-72 hours: preservation letters and records. */
-    immediatePreservation: string[];
-    /** Witnesses and bail conditions. */
-    witnessProtocol: string[];
-    /** Path A: acquittal at trial or s 174 discharge. */
-    trialBlueprint: string[];
-    /** Path B: representations, diversion, s 105A. */
-    representationsStrategy: string[];
+  caseTheory: string;
+  meritAndElementMatrix: MeritItem[];
+  /** Sorted: overdue first, then by date. */
+  deadlinesAndPrescriptionAlerts: DeadlineAlert[];
+  precedentAndStatutoryAuthorities: AuthorityReference[];
+  winningStrategyRoadmap: {
+    immediateActions_0_to_72h: string[];
+    settlementOrADRPath: string[];
+    litigationOrExecutionBlueprint: string[];
   };
   tacticalWarnings: string[];
   /** Passages retrieved from the approved sources for this assessment. */

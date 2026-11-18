@@ -190,6 +190,20 @@
       "when": 1795026283071,
       "tag": "0026_criminal_assessment",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795027966487,
+      "tag": "0027_strategy_assessment",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795027967365,
+      "tag": "0028_drop_criminal_assessment",
+      "breakpoints": true
     }
   ]
 }

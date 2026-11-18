@@ -15,6 +15,7 @@ const defaultState: IntakeFormState = {
   matterSummary: '',
   requestedOutcome: '',
   documentsMentioned: '',
+  chargeSheet: '',
   preferredLanguage: 'English',
   // Consent is asked for during the interview and recorded as given, never assumed.
   consentToStorage: false,
@@ -184,6 +185,24 @@ function IntakeForm({ onSubmit, busy, sampleMatter, onGoToCases }: IntakeFormPro
           disabled={isDisabled}
         />
       </Field>
+
+      {/criminal/i.test(form.practiceArea) ? (
+        <Field
+          label="Charge sheet (J15)"
+          id="intake-chargeSheet"
+          hint="Type or paste the counts as charged, the court, the case number and the remand and bail details. Names are removed before anything is sent to AI."
+        >
+          <textarea
+            id="intake-chargeSheet"
+            name="chargeSheet"
+            rows={5}
+            value={form.chargeSheet}
+            onChange={(event) => updateField('chargeSheet', event.target.value)}
+            placeholder="Count 1: Assault with intent to do grievous bodily harm (s 1 ...). Court: ... Next date: ..."
+            disabled={isDisabled}
+          />
+        </Field>
+      ) : null}
 
       <div className="grid-2">
         <Field label="Documents mentioned" id="intake-documents">

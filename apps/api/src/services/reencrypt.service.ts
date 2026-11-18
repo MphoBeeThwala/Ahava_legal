@@ -59,8 +59,8 @@ const SEALED_TEXT = [
   {
     table: assessments,
     id: assessments.id,
-    column: assessments.criminalEncrypted,
-    key: 'criminalEncrypted',
+    column: assessments.strategyEncrypted,
+    key: 'strategyEncrypted',
   },
   {
     table: caseTasks,

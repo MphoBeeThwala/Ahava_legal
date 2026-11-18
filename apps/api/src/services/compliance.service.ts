@@ -154,6 +154,7 @@ function formatSubmissionExport(item: intakeService.PrivateSubmission) {
       matterSummary: raw?.matterSummary || '',
       requestedOutcome: raw?.requestedOutcome || '',
       documentsMentioned: raw?.documentsMentioned || '',
+      chargeSheet: raw?.chargeSheet || '',
       urgencyHint: raw?.urgencyHint || '',
       preferredLanguage: raw?.preferredLanguage || '',
       consentToAi: Boolean(raw?.consentToAi),
