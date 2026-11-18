@@ -129,6 +129,35 @@ export function toCited(hits: SearchHit[]): CitedSource[] {
   }));
 }
 
+/**
+ * Our approved corpus first, then Laws.Africa's Knowledge Bases where
+ * enabled; numbered S1, S2... Retrieval gaps say what could not be searched.
+ */
+export async function retrieveSources(
+  queries: string[],
+  limit = 12,
+): Promise<{ sources: CitedSource[]; gaps: string[] }> {
+  const corpusHits = await search(queries, limit);
+  const kb = (await kbEnabled())
+    ? await retrieveFromKnowledgeBases(queries)
+    : { hits: [], failures: [] };
+  const seen = new Set(corpusHits.map((hit) => hit.url).filter(Boolean));
+  const kbHits = kb.hits.filter((hit) => !seen.has(hit.url)).slice(0, 8);
+  return {
+    sources: toCited([...corpusHits, ...kbHits]),
+    gaps: kb.failures.length
+      ? [
+          `Laws.Africa could not be searched (${kb.failures.join('; ')}): only the firm's approved corpus was used.`,
+        ]
+      : [],
+  };
+}
+
+/** One passage as the model sees it. */
+export function sourceText(source: CitedSource): string {
+  return sourceBlock(source);
+}
+
 export async function answerBrief(
   brief: string,
   context: { subjectId: string; actor: Actor },
@@ -158,19 +187,7 @@ export async function answerBrief(
     .filter(Boolean)
     .slice(0, 6);
 
-  // Our approved corpus first, then Laws.Africa's Knowledge Bases where enabled.
-  const corpusHits = await search(cleanQueries, 12);
-  const kb = (await kbEnabled())
-    ? await retrieveFromKnowledgeBases(cleanQueries)
-    : { hits: [], failures: [] };
-  const seen = new Set(corpusHits.map((hit) => hit.url).filter(Boolean));
-  const kbHits = kb.hits.filter((hit) => !seen.has(hit.url)).slice(0, 8);
-  const sources = toCited([...corpusHits, ...kbHits]);
-  const retrievalGaps = kb.failures.length
-    ? [
-        `Laws.Africa could not be searched (${kb.failures.join('; ')}): only the firm's approved corpus was used.`,
-      ]
-    : [];
+  const { sources, gaps: retrievalGaps } = await retrieveSources(cleanQueries);
   const generatedAt = new Date().toISOString();
   if (!sources.length) {
     return {

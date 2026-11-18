@@ -765,6 +765,90 @@ export interface Assessment {
   provider: string;
   popiaNotes: string[];
   createdAt: string;
+  /** Criminal matters only: the count-by-count merit assessment. */
+  criminal?: CriminalAssessment | null;
+}
+
+/** How likely the primary defence is to succeed on the facts known so far. */
+export type DefenceViability = 'high' | 'moderate' | 'high-risk';
+
+/** An authority the assessment relies on. */
+export interface AuthorityReference {
+  /** E.g. "S v Trainor" or "Criminal Procedure Act 51 of 1977, s 22(b)". */
+  authority: string;
+  /** The principle it is relied on for. */
+  principle: string;
+  /** Retrieved passages (S1, S2...) that contain it. */
+  sources: string[];
+  /** true: found in a retrieved passage. false: named from general knowledge; check before relying. */
+  verified: boolean;
+}
+
+export interface ElementAnalysis {
+  /** E.g. "Unlawfulness", "Intention (dolus)". */
+  element: string;
+  /** What the State must prove. */
+  stateBurden: string;
+  /** What the client's version says about it. */
+  clientVersion: string;
+  /** Where that leaves the element. */
+  assessment: string;
+}
+
+export interface CountAssessment {
+  /** E.g. "Count 1: Assault with intent to do grievous bodily harm". */
+  count: string;
+  elements: ElementAnalysis[];
+  primaryDefence: string;
+  viability: DefenceViability;
+  viabilityReasoning: string;
+  /** Where the State will attack the client's version. */
+  prosecutionAttacks: string[];
+  /** Competent verdicts and fallback positions. */
+  competentVerdicts: string[];
+  /** Sentencing exposure: minimum sentences, court jurisdiction. */
+  sentencing: string;
+  authorities: AuthorityReference[];
+}
+
+export interface ProceduralIssue {
+  issue: string;
+  analysis: string;
+  authorities: AuthorityReference[];
+}
+
+export interface CriminalAssessment {
+  caseTheory: string;
+  factAudit: {
+    /** Taken as given from the intake or charge sheet. */
+    confirmed: string[];
+    /** Need objective corroboration (registers, OB entries, footage). */
+    corroborationNeeded: string[];
+    /** Genuinely unknown and material to the defence. */
+    criticalUnknowns: string[];
+  };
+  counts: CountAssessment[];
+  proceduralIssues: ProceduralIssue[];
+  strategy: {
+    /** 0-72 hours: preservation letters and records. */
+    immediatePreservation: string[];
+    /** Witnesses and bail conditions. */
+    witnessProtocol: string[];
+    /** Path A: acquittal at trial or s 174 discharge. */
+    trialBlueprint: string[];
+    /** Path B: representations, diversion, s 105A. */
+    representationsStrategy: string[];
+  };
+  tacticalWarnings: string[];
+  /** Passages retrieved from the approved sources for this assessment. */
+  sources: CitedSource[];
+  /** Items the guardrails removed, with why. */
+  removed: Array<{ text: string; reason: string }>;
+  /** What could not be searched or found. */
+  gaps: string[];
+  queries: string[];
+  model: string;
+  generatedAt: string;
 }
 
 export interface MatterCaseSummary {

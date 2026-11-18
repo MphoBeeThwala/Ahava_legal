@@ -8,6 +8,7 @@ import type { IntakeSubmission } from '../validation/schemas';
 import { db } from '../db/client';
 import { withTenant } from '../db/tenant';
 import {
+  assessments,
   conflictChecks,
   documents,
   ficaDocuments,
@@ -55,6 +56,12 @@ function notOnVersion(column: AnyPgColumn, version: number): SQL {
 /** Free text sealed with the firm key (sealed-text.ts): each nullable column. */
 const SEALED_TEXT = [
   { table: cases, id: cases.id, column: cases.titleEncrypted, key: 'titleEncrypted' },
+  {
+    table: assessments,
+    id: assessments.id,
+    column: assessments.criminalEncrypted,
+    key: 'criminalEncrypted',
+  },
   {
     table: caseTasks,
     id: caseTasks.id,
