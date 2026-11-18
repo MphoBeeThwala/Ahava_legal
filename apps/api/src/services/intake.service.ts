@@ -31,6 +31,7 @@ import { ensureStringArray, triage, type TriageInput } from './ai.service';
 import { deidentify, type KnownPerson } from './deidentify';
 import { blindIndex, blindIndexCandidates, decryptJson, encryptJson } from './privacy.service';
 import * as auditService from './audit.service';
+import { unseal } from './sealed-text';
 import * as partyService from './party.service';
 
 /** The client as triage knows them: their name and contact details are removed. */
@@ -81,12 +82,20 @@ function toCaseSummary(row: CaseRow): MatterCaseSummary {
   };
 }
 
-export function toMatterCase(row: CaseRow): MatterCase {
+/** A matter's title: encrypted, or the legacy clear text. */
+export async function matterTitle(
+  row: Pick<CaseRow, 'title' | 'titleEncrypted'>,
+): Promise<string | null> {
+  const { title } = await unseal(row.titleEncrypted, { title: row.title ?? '' });
+  return title || null;
+}
+
+export async function toMatterCase(row: CaseRow): Promise<MatterCase> {
   return {
     id: row.id,
     submissionId: row.intakeSubmissionId,
     caseNumber: row.caseNumber,
-    title: row.title,
+    title: await matterTitle(row),
     clientLabel: row.clientLabel,
     practiceArea: row.practiceArea,
     urgency: row.urgency,
@@ -376,7 +385,7 @@ export async function assessSubmission(id: string, actor: Actor = {}): Promise<P
 
 export async function listCases(limit = 500): Promise<MatterCase[]> {
   const rows = await db().select().from(cases).orderBy(desc(cases.createdAt)).limit(limit);
-  return rows.map(toMatterCase);
+  return Promise.all(rows.map(toMatterCase));
 }
 
 /** Finds a case by its id, case number, or intake submission id. */

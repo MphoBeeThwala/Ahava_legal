@@ -18,6 +18,7 @@ import { decryptJson, encryptJson, payloadKeyVersion } from './privacy.service';
 import { firmContainer, objectStore } from './object-store';
 import * as intakeService from './intake.service';
 import * as auditService from './audit.service';
+import { seal, unseal } from './sealed-text';
 
 const PREVIEW_LENGTH = 180;
 
@@ -44,6 +45,22 @@ export async function writeSealedContent(documentId: string, sealed: string) {
   return { encryptedContent: null, storageKey, contentKeyVersion: payloadKeyVersion(sealed) };
 }
 
+/** A document's title and list preview: encrypted, or the legacy clear text. */
+export function documentMeta(
+  row: Pick<DocumentRow, 'title' | 'contentPreview' | 'metaEncrypted'>,
+): Promise<{ title: string; preview: string }> {
+  return unseal(row.metaEncrypted, { title: row.title, preview: row.contentPreview });
+}
+
+/** The columns that store a document's title and preview. */
+export async function sealedMeta(title: string, preview: string) {
+  return {
+    title: '',
+    contentPreview: '',
+    metaEncrypted: await seal({ title, preview: preview.slice(0, PREVIEW_LENGTH) }),
+  };
+}
+
 async function toPublicDocument(
   row: DocumentRow,
   includeContent: boolean,
@@ -53,16 +70,17 @@ async function toPublicDocument(
     content = await decryptJson<DocumentContent>(await readSealedContent(row));
   }
 
+  const meta = await documentMeta(row);
   return {
     id: row.id,
     caseId: row.caseId,
     caseNumber: row.caseNumber,
     clientLabel: row.clientLabel,
-    title: row.title,
+    title: meta.title,
     documentType: row.documentType,
     status: row.status,
     tags: row.tags,
-    contentPreview: row.contentPreview,
+    contentPreview: meta.preview,
     createdBy: row.createdBy,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
@@ -103,12 +121,11 @@ export async function createDocument(input: unknown, actor: Actor = {}): Promise
       caseId: caseRecord.id,
       caseNumber: caseRecord.caseNumber,
       clientLabel: caseRecord.clientLabel,
-      title: document.title,
+      ...(await sealedMeta(document.title, document.body)),
       documentType: document.documentType,
       tags: document.tags,
       status: document.status,
       encryptedContent: objectStore() ? null : sealed,
-      contentPreview: document.body.slice(0, PREVIEW_LENGTH),
       createdBy: actorName(actor),
     })
     .returning();

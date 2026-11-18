@@ -22,13 +22,18 @@ import {
 } from '../validation/schemas';
 import * as intakeService from './intake.service';
 import * as auditService from './audit.service';
+import { seal, unseal } from './sealed-text';
 
-function toTask(row: CaseTaskRow): CaseTask {
+async function toTask(row: CaseTaskRow): Promise<CaseTask> {
+  const content = await unseal(row.contentEncrypted, {
+    title: row.title,
+    description: row.description,
+  });
   return {
     id: row.id,
     caseId: row.caseId,
-    title: row.title,
-    description: row.description,
+    title: content.title,
+    description: content.description,
     status: row.status,
     dueDate: row.dueDate,
     assigneeName: row.assigneeName,
@@ -38,12 +43,13 @@ function toTask(row: CaseTaskRow): CaseTask {
   };
 }
 
-function toTimelineEntry(row: CaseTimelineRow): CaseTimelineEntry {
+async function toTimelineEntry(row: CaseTimelineRow): Promise<CaseTimelineEntry> {
+  const { message } = await unseal(row.contentEncrypted, { message: row.message });
   return {
     id: row.id,
     caseId: row.caseId,
     eventType: row.eventType,
-    message: row.message,
+    message,
     metadata: row.metadata,
     actorName: row.actorName,
     createdAt: iso(row.createdAt),
@@ -70,12 +76,14 @@ export async function getCasesIndex(limit = 500): Promise<CaseIndexEntry[]> {
     .orderBy(desc(cases.createdAt))
     .limit(limit);
 
-  return rows.map((row) => ({
-    ...intakeService.toMatterCase(row.matterCase),
-    taskCount: row.taskCount,
-    openTaskCount: row.openTaskCount,
-    timelineCount: row.timelineCount,
-  }));
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...(await intakeService.toMatterCase(row.matterCase)),
+      taskCount: row.taskCount,
+      openTaskCount: row.openTaskCount,
+      timelineCount: row.timelineCount,
+    })),
+  );
 }
 
 export async function getCase(caseRef: string): Promise<CaseDetail | null> {
@@ -98,9 +106,9 @@ export async function getCase(caseRef: string): Promise<CaseDetail | null> {
   ]);
 
   return {
-    ...intakeService.toMatterCase(caseRecord),
-    tasks: tasks.map(toTask),
-    timeline: timeline.map(toTimelineEntry),
+    ...(await intakeService.toMatterCase(caseRecord)),
+    tasks: await Promise.all(tasks.map(toTask)),
+    timeline: await Promise.all(timeline.map(toTimelineEntry)),
   };
 }
 
@@ -112,7 +120,7 @@ export async function listDueTasks(limit = 50): Promise<CaseTask[]> {
     .where(and(ne(caseTasks.status, 'done'), sql`${caseTasks.dueDate} is not null`))
     .orderBy(asc(caseTasks.dueDate))
     .limit(limit);
-  return rows.map(toTask);
+  return Promise.all(rows.map(toTask));
 }
 
 export async function countOpenTasks(): Promise<number> {
@@ -135,8 +143,9 @@ export async function addTask(
     .insert(caseTasks)
     .values({
       caseId: caseRecord.id,
-      title: task.title,
-      description: task.description,
+      title: '',
+      description: '',
+      contentEncrypted: await seal({ title: task.title, description: task.description }),
       dueDate: task.dueDate ?? null,
       assigneeName: task.assigneeName ?? null,
       createdBy: actorName(actor),
@@ -160,7 +169,7 @@ export async function addTask(
     caseRecord.id,
     {
       eventType: 'task_created',
-      message: `Task created: ${saved.title}`,
+      message: `Task created: ${task.title}`,
       metadata: { taskId: saved.id },
     },
     actor,
@@ -188,7 +197,7 @@ export async function completeTask(
     caseRecord.id,
     {
       eventType: 'task_completed',
-      message: `Task completed: ${updated.title}`,
+      message: `Task completed: ${(await toTask(updated)).title}`,
       metadata: { taskId },
     },
     actor,
@@ -237,7 +246,7 @@ export async function updateCaseStatus(caseRef: string, input: unknown, actor: A
     actor,
   );
 
-  return intakeService.toMatterCase(updated);
+  return await intakeService.toMatterCase(updated);
 }
 
 /** Endpoint: POST /cases/:caseId/timeline (a note written by staff). */
@@ -256,7 +265,8 @@ async function recordTimeline(
     .values({
       caseId,
       eventType: entry.eventType,
-      message: entry.message,
+      message: '',
+      contentEncrypted: await seal({ message: entry.message }),
       metadata: entry.metadata,
       actorName: actorName(actor),
     })

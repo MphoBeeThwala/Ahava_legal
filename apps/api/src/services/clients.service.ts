@@ -19,6 +19,7 @@ import * as partyService from './party.service';
 import * as ficaService from './fica.service';
 import { currentFirm } from '../db/tenant-context';
 import * as intakeService from './intake.service';
+import { seal } from './sealed-text';
 import * as auditService from './audit.service';
 
 export async function createClient(input: unknown, actor: Actor): Promise<PartyRecord> {
@@ -60,7 +61,8 @@ export async function openMatter(input: unknown, actor: Actor): Promise<MatterCa
     .insert(cases)
     .values({
       caseNumber: await intakeService.nextCaseNumber(),
-      title: matter.title,
+      title: null,
+      titleEncrypted: matter.title ? await seal({ title: matter.title }) : null,
       // The client's reference number, never their name.
       clientLabel: client.partyNumber,
       practiceArea: matter.practiceArea,

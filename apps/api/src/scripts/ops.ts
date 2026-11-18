@@ -3,6 +3,7 @@
 //   npm run ops -w apps/api -- keys status   [--slug <slug>]
 //   npm run ops -w apps/api -- keys rotate   --slug <slug>
 //   npm run ops -w apps/api -- keys reencrypt [--slug <slug>]
+//   npm run ops -w apps/api -- encrypt-free-text [--slug <slug>]
 //   npm run ops -w apps/api -- keys rewrap   [--slug <slug>]
 //   npm run ops -w apps/api -- keys prune    [--slug <slug>]
 //   npm run ops -w apps/api -- anchor
@@ -26,6 +27,7 @@ import {
   pruneRetiredKeys,
   reencryptFirm,
 } from '../services/reencrypt.service';
+import { encryptLegacyFreeText } from '../services/free-text-migration.service';
 import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { sendRemindersForAllFirms } from '../services/calendar.service';
@@ -395,6 +397,13 @@ async function main(): Promise<void> {
     );
   } else if (command === 'operator') {
     await operators(positionals[0] ?? 'list', values.email, values.name);
+  } else if (command === 'encrypt-free-text') {
+    for (const firm of await targetFirms(values.slug)) {
+      const done = await asSystem(firm, encryptLegacyFreeText);
+      console.log(
+        `${firm.slug}: encrypted ${done.matters} matter title(s), ${done.tasks} task(s), ${done.timeline} timeline entr(ies), ${done.documents} document title(s), ${done.notifications} notification(s), ${done.reports} report title(s)`,
+      );
+    }
   } else if (command === 'anchor') {
     for (const result of await anchorAllFirms()) {
       console.log(`${result.firm}: ${result.anchored ? 'anchored' : 'no new events'}`);
@@ -438,7 +447,7 @@ async function main(): Promise<void> {
     );
   } else {
     throw new Error(
-      'Usage: ops keys status|rotate|reencrypt|rewrap|prune [--slug <slug>] | ops anchor | ops reminders | ops domains | ops restore-check | ops subscriptions | ops courts list|set|remove | ops trust enable|disable --slug <slug> | ops sources list|add|suspend|approve|import|sync-sca [--listing <url>] [--pages N] [--limit N]|sync-laws-africa | ops plans list|set|disable | ops subscription comp --slug <slug> | ops court-rolls [--file <roll> --division <code> --title <title>] | ops operator create|list|disable|enable',
+      'Usage: ops keys status|rotate|reencrypt|rewrap|prune [--slug <slug>] | ops encrypt-free-text [--slug <slug>] | ops anchor | ops reminders | ops domains | ops restore-check | ops subscriptions | ops courts list|set|remove | ops trust enable|disable --slug <slug> | ops sources list|add|suspend|approve|import|sync-sca [--listing <url>] [--pages N] [--limit N]|sync-laws-africa | ops plans list|set|disable | ops subscription comp --slug <slug> | ops court-rolls [--file <roll> --division <code> --title <title>] | ops operator create|list|disable|enable',
     );
   }
 }

@@ -1141,8 +1141,10 @@ export const cases = pgTable(
       .unique()
       .references(() => submissions.id, { onDelete: 'cascade' }),
     caseNumber: text('case_number').notNull(),
-    /** Short description of the matter (no personal information). */
+    /** Legacy clear-text title; new titles are stored only in title_encrypted. */
     title: text('title'),
+    /** The matter's short description, encrypted with the firm key. */
+    titleEncrypted: text('title_encrypted'),
     clientLabel: text('client_label').notNull(),
     practiceArea: text('practice_area').notNull(),
     urgency: text('urgency').notNull(),
@@ -1400,8 +1402,11 @@ export const caseTasks = pgTable(
     caseId: uuid('case_id')
       .notNull()
       .references(() => cases.id, { onDelete: 'cascade' }),
+    /** Legacy clear text ('' once encrypted): the task lives in content_encrypted. */
     title: text('title').notNull(),
     description: text('description').notNull().default(''),
+    /** { title, description }, encrypted with the firm key. */
+    contentEncrypted: text('content_encrypted'),
     status: text('status').notNull().default('open'),
     dueDate: date('due_date', { mode: 'string' }),
     assigneeName: text('assignee_name'),
@@ -1425,7 +1430,10 @@ export const caseTimeline = pgTable(
       .notNull()
       .references(() => cases.id, { onDelete: 'cascade' }),
     eventType: text('event_type').notNull().default('note'),
+    /** Legacy clear text ('' once encrypted): the message lives in content_encrypted. */
     message: text('message').notNull(),
+    /** { message }, encrypted with the firm key. */
+    contentEncrypted: text('content_encrypted'),
     metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
     actorName: text('actor_name').notNull(),
     ...timestamps,
@@ -1447,7 +1455,10 @@ export const documents = pgTable(
       .references(() => cases.id, { onDelete: 'cascade' }),
     caseNumber: text('case_number').notNull(),
     clientLabel: text('client_label').notNull(),
+    /** Legacy clear text ('' once encrypted): the title lives in meta_encrypted. */
     title: text('title').notNull(),
+    /** { title, preview }, encrypted with the firm key. */
+    metaEncrypted: text('meta_encrypted'),
     documentType: text('document_type').notNull().default('correspondence'),
     tags: jsonb('tags').$type<string[]>().notNull().default([]),
     status: text('status').notNull().default('draft'),
@@ -1825,8 +1836,11 @@ export const notifications = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     firmId: firmId(),
+    /** Legacy clear text ('' once encrypted): title and body live in content_encrypted. */
     title: text('title').notNull(),
     body: text('body').notNull(),
+    /** { title, body }, encrypted with the firm key. */
+    contentEncrypted: text('content_encrypted'),
     category: text('category').notNull().default('general'),
     priority: text('priority').notNull().default('medium'),
     recipientRole: text('recipient_role').notNull().default('attorney'),
@@ -2010,7 +2024,10 @@ export const reportSnapshots = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     firmId: firmId(),
     reportType: text('report_type').notNull().default('dashboard'),
+    /** Legacy clear text ('' once encrypted): the title lives in title_encrypted. */
     title: text('title').notNull(),
+    /** The snapshot's title, encrypted with the firm key. */
+    titleEncrypted: text('title_encrypted'),
     payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
     createdBy: text('created_by').notNull(),
     ...timestamps,

@@ -9,12 +9,19 @@ import { actorName, type Actor } from '../lib/actor';
 import { iso, isoOrNull } from '../lib/time';
 import { notificationSchema, parse } from '../validation/schemas';
 import * as auditService from './audit.service';
+import { seal, unseal } from './sealed-text';
 
-function formatNotification(row: NotificationRow): NotificationRecord {
+/** The columns that store a notification's title and body. */
+export async function sealedNotice(title: string, body: string) {
+  return { title: '', body: '', contentEncrypted: await seal({ title, body }) };
+}
+
+async function formatNotification(row: NotificationRow): Promise<NotificationRecord> {
+  const content = await unseal(row.contentEncrypted, { title: row.title, body: row.body });
   return {
     id: row.id,
-    title: row.title,
-    body: row.body,
+    title: content.title,
+    body: content.body,
     category: row.category,
     priority: row.priority,
     recipientRole: row.recipientRole,
@@ -53,7 +60,7 @@ export async function listNotifications(
     .where(filterConditions(filters))
     .orderBy(desc(notifications.createdAt))
     .limit(limit);
-  return rows.map(formatNotification);
+  return Promise.all(rows.map(formatNotification));
 }
 
 export async function unreadCount(recipientRole: string | null = null): Promise<number> {
@@ -72,8 +79,7 @@ export async function createNotification(
   const [saved] = await db()
     .insert(notifications)
     .values({
-      title: notification.title,
-      body: notification.body,
+      ...(await sealedNotice(notification.title, notification.body)),
       category: notification.category,
       priority: notification.priority,
       recipientRole: notification.recipientRole,

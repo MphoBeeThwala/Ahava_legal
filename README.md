@@ -233,7 +233,9 @@ Who sees what:
   - `keys status` — keys per firm and how much data is not yet on the active key
   - `keys rotate --slug <firm>` then `keys reencrypt --slug <firm>` then `keys prune` — rotate a firm's data key
   - `keys rewrap` — after rotating the Key Vault key or `INTAKE_ENCRYPTION_KEY` (set `INTAKE_ENCRYPTION_KEY_PREVIOUS`), or moving from local to Key Vault
+  - `encrypt-free-text [--slug <firm>]` — once after upgrading: encrypts matter, task, document, notification and report titles, timeline messages and document previews written before they were encrypted (safe to run again)
   - `anchor` — anchor every firm's audit chain (run daily)
+- **Free text staff type** (matter, task, document, notification and report titles, task descriptions, timeline messages, document previews) is encrypted with the firm key like client details, since it can name clients.
 - **Documents** go to `OBJECT_STORE` (`azure-blob` in production, one container per firm, encrypted before upload). Unset, they stay encrypted in PostgreSQL. Deleting a matter removes its blobs only after the database change commits.
 - **Audit anchors**: the head of each firm's chain is recorded daily, with a write-once copy in an immutable container. Administrators use **Verify audit trail** (Account & team), which checks the chain and every anchor, so rewriting history is detected even by someone holding `AUDIT_CHAIN_SECRET`.
 - **POPIA requests** (data-subject access, export, erasure) are for administrators (the information officer).

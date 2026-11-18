@@ -12,14 +12,16 @@ import * as caseService from './case.service';
 import * as billingService from './billing.service';
 import * as notificationsService from './notifications.service';
 import * as auditService from './audit.service';
+import { seal, unseal } from './sealed-text';
 
 const HEARING_TYPES = ['hearing', 'client_meeting', 'deadline'];
 
-function formatSnapshot(row: ReportSnapshotRow): ReportSnapshot {
+async function formatSnapshot(row: ReportSnapshotRow): Promise<ReportSnapshot> {
+  const { title } = await unseal(row.titleEncrypted, { title: row.title });
   return {
     id: row.id,
     reportType: row.reportType,
-    title: row.title,
+    title,
     payload: row.payload,
     createdBy: row.createdBy,
     createdAt: iso(row.createdAt),
@@ -81,7 +83,8 @@ export async function generateSnapshot(input: unknown, actor: Actor = {}): Promi
     .insert(reportSnapshots)
     .values({
       reportType,
-      title,
+      title: '',
+      titleEncrypted: await seal({ title }),
       payload: payload as unknown as Record<string, unknown>,
       createdBy: actorName(actor),
     })
@@ -109,5 +112,5 @@ export async function listSnapshots(limit = 100): Promise<ReportSnapshot[]> {
     .from(reportSnapshots)
     .orderBy(desc(reportSnapshots.createdAt))
     .limit(limit);
-  return rows.map(formatSnapshot);
+  return Promise.all(rows.map(formatSnapshot));
 }

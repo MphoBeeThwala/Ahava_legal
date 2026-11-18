@@ -48,6 +48,8 @@ import { randomToken, sha256 } from '../lib/tokens';
 import { iso, isoOrNull } from '../lib/time';
 import { parse } from '../validation/schemas';
 import { blindIndex, blindIndexCandidates, decryptJson, encryptJson } from './privacy.service';
+import { matterTitle } from './intake.service';
+import { documentMeta } from './documents.service';
 import { partyDetails } from './party.service';
 import { firmOrigin } from './firm.service';
 import { sendMail } from './mail.service';
@@ -466,7 +468,7 @@ export function matters(user: PortalUserRow): Promise<PortalMatter[]> {
         return {
           id: row.id,
           caseNumber: row.caseNumber,
-          title: row.title ?? row.practiceArea,
+          title: (await matterTitle(row)) ?? row.practiceArea,
           status: row.status,
           update: row.clientUpdateEncrypted
             ? ((await decryptJson<string>(row.clientUpdateEncrypted)) ?? null)
@@ -488,13 +490,15 @@ export function sharedDocuments(user: PortalUserRow): Promise<PortalDocument[]> 
       .from(documents)
       .where(and(inArray(documents.caseId, ids), isNotNull(documents.sharedWithClientAt)))
       .orderBy(desc(documents.sharedWithClientAt));
-    return rows.map((row) => ({
-      id: row.id,
-      caseNumber: row.caseNumber,
-      title: row.title,
-      documentType: row.documentType,
-      sharedAt: iso(row.sharedWithClientAt!),
-    }));
+    return Promise.all(
+      rows.map(async (row) => ({
+        id: row.id,
+        caseNumber: row.caseNumber,
+        title: (await documentMeta(row)).title,
+        documentType: row.documentType,
+        sharedAt: iso(row.sharedWithClientAt!),
+      })),
+    );
   });
 }
 
