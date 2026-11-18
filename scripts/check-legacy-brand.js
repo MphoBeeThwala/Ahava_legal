@@ -16,7 +16,7 @@ const SKIP_DIRS = new Set(['node_modules', '.git', 'build', 'dist', 'coverage'])
 const SKIP_FILES = new Set(['package-lock.json']);
 // Known, deliberate exceptions: identifiers of live infrastructure that would
 // break if renamed. Remove each once that infrastructure is retired.
-const ALLOWED_LINES = [{ file: 'render.yaml', contains: 'legacy Render service ID' }];
+const ALLOWED_LINES = [];
 const TEXT_EXT = new Set([
   '.js',
   '.jsx',

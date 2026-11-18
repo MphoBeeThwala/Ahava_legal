@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: mohanoe-inc-legal # legacy Render service ID; kept until the Azure migration (renaming creates a new service)
+    name: ahava-legal
     runtime: node
     plan: starter
     rootDir: .
