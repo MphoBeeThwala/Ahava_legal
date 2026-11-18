@@ -293,6 +293,15 @@ function App() {
   /** Shows one section of the workspace (one view at a time, not one long page). */
   const showSection = useCallback((sectionId: SectionId) => {
     setActiveSection(sectionId);
+    if (sectionId !== 'intake') {
+      // Leaving the Intake screen clears a finished assessment (it is saved on
+      // the matter); one still running stays so its result is still picked up.
+      setIntakeResult((current) => {
+        const keep = current?.assessmentJob?.state === 'running' ? current : null;
+        intakeResultId.current = keep?.id ?? null;
+        return keep;
+      });
+    }
     setMenuOpen(false);
     if (window.location.hash !== `#${sectionId}`) {
       window.history.pushState(null, '', `#${sectionId}`);
@@ -313,11 +322,8 @@ function App() {
     setSummary(summaryResponse?.data ?? null);
     setCases(casesResponse?.data ?? []);
 
-    const latest = submissionsResponse?.data[0];
-    if (latest) {
-      setSelectedMatter(latest);
-      setSelectedCaseId(latest.matterCase?.id || latest.matterCase?.submissionId || null);
-    }
+    // No matter is opened automatically: an assessment shows only when its
+    // matter is opened (or on the Intake screen, for the intake just taken).
   };
 
   const clearWorkspace = () => {
@@ -696,16 +702,17 @@ function App() {
   const view = activeNav.id;
   const can = (permission: Permission) => currentUser.permissions.includes(permission);
 
+  // Shown only once a matter is opened; closing it keeps the matter open.
   const assessmentCard =
-    selectedMatter &&
-    'submissionId' in selectedMatter &&
-    selectedMatter.submissionId === null ? null : (
+    !selectedMatter ||
+    ('submissionId' in selectedMatter && selectedMatter.submissionId === null) ? null : (
       <ErrorBoundary label="Assessment">
         <AssessmentCard
           matter={selectedMatter}
           onGoToIntake={() => showSection('intake')}
           onGoToCases={() => showSection('cases')}
           onRetry={retryAssessment}
+          onClose={() => setSelectedMatter(null)}
         />
       </ErrorBoundary>
     );
@@ -932,6 +939,15 @@ function App() {
                   matter={intakeResult}
                   onGoToCases={() => showSection('cases')}
                   onRetry={retryAssessment}
+                  onClose={() => showIntakeResult(null)}
+                  onOpenMatter={() => {
+                    const matterCase = intakeResult?.matterCase;
+                    if (matterCase) {
+                      showIntakeResult(null);
+                      void handleSelectCase(matterCase);
+                    }
+                  }}
+                  emptyText="The assessment of the intake you take here appears in this panel. Earlier assessments are saved on their matters under Cases."
                 />
               </ErrorBoundary>
             </aside>
