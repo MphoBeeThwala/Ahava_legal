@@ -25,16 +25,58 @@ interface AssessmentCardProps {
   onGoToCases?: () => void;
   /** Runs the assessment again after a background run failed. */
   onRetry?: (submissionId: string) => void;
+  /** Clears the card (the assessment stays saved on the matter). */
+  onClose?: () => void;
+  /** Opens the matter the assessment belongs to. */
+  onOpenMatter?: () => void;
+  /** Text for the empty card. */
+  emptyText?: string;
 }
 
-function AssessmentCard({ matter, onGoToIntake, onGoToCases, onRetry }: AssessmentCardProps) {
+function CardActions({
+  onClose,
+  onOpenMatter,
+  closeLabel = 'Close',
+}: {
+  onClose?: () => void;
+  onOpenMatter?: () => void;
+  closeLabel?: string;
+}) {
+  if (!onClose && !onOpenMatter) {
+    return null;
+  }
+  return (
+    <div className="assessment-actions">
+      {onOpenMatter ? (
+        <button type="button" className="secondary-button" onClick={onOpenMatter}>
+          Open the matter
+        </button>
+      ) : null}
+      {onClose ? (
+        <button type="button" className="secondary-button" onClick={onClose}>
+          {closeLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function AssessmentCard({
+  matter,
+  onGoToIntake,
+  onGoToCases,
+  onRetry,
+  onClose,
+  onOpenMatter,
+  emptyText,
+}: AssessmentCardProps) {
   if (!matter) {
     return (
       <div className="panel assessment-panel">
         <p className="panel-kicker">Assessment</p>
         <h2>No matter selected</h2>
         <p className="muted">
-          Submit an intake or choose a case to view the attorney-facing triage.
+          {emptyText || 'Submit an intake or choose a case to view the attorney-facing triage.'}
         </p>
         <div className="empty-actions">
           {onGoToIntake ? (
@@ -63,6 +105,7 @@ function AssessmentCard({ matter, onGoToIntake, onGoToCases, onRetry }: Assessme
           usually takes one to three minutes; it will appear here when it is ready. You can keep
           working in the meantime.
         </p>
+        <CardActions onClose={onClose} closeLabel="Hide (it keeps running and is saved)" />
       </div>
     );
   }
@@ -80,6 +123,7 @@ function AssessmentCard({ matter, onGoToIntake, onGoToCases, onRetry }: Assessme
             Run the assessment again
           </button>
         ) : null}
+        <CardActions onClose={onClose} />
       </div>
     );
   }
@@ -137,6 +181,11 @@ function AssessmentCard({ matter, onGoToIntake, onGoToCases, onRetry }: Assessme
           </ul>
         </div>
       ) : null}
+      <CardActions
+        onClose={onClose}
+        onOpenMatter={matter.matterCase ? onOpenMatter : undefined}
+        closeLabel="Done, close"
+      />
     </div>
   );
 }

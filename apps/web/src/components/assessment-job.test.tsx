@@ -53,3 +53,48 @@ describe('background assessment states', () => {
     expect(onEdit).toHaveBeenCalled();
   });
 });
+
+describe('closing the assessment', () => {
+  test('a finished assessment can be closed or its matter opened', () => {
+    const onClose = vi.fn();
+    const onOpenMatter = vi.fn();
+    render(
+      <AssessmentCard
+        matter={{
+          ...submission(null),
+          assessment: {
+            id: 'assessment-1',
+            provider: 'fake',
+            model: 'fake-1',
+            matterType: 'General',
+            urgency: 'medium',
+            summary: 'Done.',
+            keyFacts: [],
+            attorneyQuestions: [],
+            recommendedDocuments: [],
+            complianceFlags: [],
+            nextActions: [],
+            confidence: 0.5,
+            popiaNotes: [],
+            createdAt: '2026-11-18T10:00:00Z',
+          } as PublicSubmission['assessment'],
+          matterCase: {
+            id: 'case-1',
+            submissionId: 'sub-1',
+            caseNumber: 'MAT-2026-0007',
+            status: 'triage',
+            urgency: 'medium',
+            practiceArea: 'General',
+            nextAction: null,
+          } as PublicSubmission['matterCase'],
+        }}
+        onClose={onClose}
+        onOpenMatter={onOpenMatter}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Open the matter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done, close' }));
+    expect(onOpenMatter).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+});

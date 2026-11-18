@@ -1135,3 +1135,10 @@ body,
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.assessment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
