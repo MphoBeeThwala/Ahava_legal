@@ -71,6 +71,8 @@ export async function callModel(request: AiRequest, context: CallContext): Promi
       .insert(aiCalls)
       .values({
         ...base,
+        // The fallback model may have answered: record the one that did.
+        provider: result.provider,
         model: result.model,
         inputTokens: result.inputTokens,
         outputTokens: result.outputTokens,
