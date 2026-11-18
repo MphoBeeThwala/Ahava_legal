@@ -3,11 +3,11 @@
 
 import { and, count, desc, eq, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
 import type {
-  CriminalAssessment,
   IntakeSummary,
   MatterCase,
   MatterCaseSummary,
   PublicSubmission,
+  StrategyAssessment,
 } from '@ahava88/shared';
 import { db } from '../db/client';
 import { afterCommit, currentFirm } from '../db/tenant-context';
@@ -30,7 +30,7 @@ import { iso } from '../lib/time';
 import { intakeSubmissionSchema, parse, type IntakeSubmission } from '../validation/schemas';
 import { aiConfigured } from '../lib/ai-client';
 import { ensureStringArray, triage, type TriageInput } from './ai.service';
-import { assessCriminalMatter, isCriminalMatter } from './criminal-assessment';
+import { assessStrategy, detectPracticeArea } from './legal-strategy';
 import { deidentify, type KnownPerson } from './deidentify';
 import { blindIndex, blindIndexCandidates, decryptJson, encryptJson } from './privacy.service';
 import * as auditService from './audit.service';
@@ -56,6 +56,7 @@ function triageInput(submission: IntakeSubmission): TriageInput {
     matterSummary: submission.matterSummary,
     requestedOutcome: submission.requestedOutcome,
     documentsMentioned: submission.documentsMentioned,
+    chargeSheet: submission.chargeSheet,
     people: intakePeople(submission),
     consentToAi: submission.consentToAi,
   };
@@ -118,8 +119,8 @@ async function toPublicSubmission(
   assessment: AssessmentRow | null = null,
   caseRecord: CaseRow | null = null,
 ): Promise<PublicSubmission> {
-  const criminal = assessment?.criminalEncrypted
-    ? await decryptJson<CriminalAssessment>(assessment.criminalEncrypted)
+  const strategy = assessment?.strategyEncrypted
+    ? await decryptJson<StrategyAssessment>(assessment.strategyEncrypted)
     : null;
   return {
     id: submission.id,
@@ -145,7 +146,7 @@ async function toPublicSubmission(
       provider: assessment.provider,
       popiaNotes: ensureStringArray(assessment.popiaNotes),
       createdAt: iso(assessment.createdAt),
-      criminal,
+      strategy,
     },
     matterCase: caseRecord && toCaseSummary(caseRecord),
   };
@@ -279,17 +280,27 @@ export async function assessSubmission(id: string, actor: Actor = {}): Promise<P
     subjectId: id,
     actor,
   });
-  // Criminal matters also get the count-by-count merit assessment (same
-  // de-identified brief; only with consent and a configured model).
-  const criminal =
-    raw.consentToAi !== false &&
-    aiConfigured() &&
-    isCriminalMatter(raw.practiceArea, result.matterType)
-      ? await assessCriminalMatter(brief.text, { subjectType: 'submission', subjectId: id, actor })
+  // Matters in a supported practice area also get the strategy assessment
+  // (same de-identified brief; only with consent and a configured model).
+  const detection = detectPracticeArea({
+    practiceArea: raw.practiceArea,
+    triageMatterType: result.matterType,
+    matterSummary: raw.matterSummary,
+    requestedOutcome: raw.requestedOutcome,
+    documentsMentioned: raw.documentsMentioned,
+    chargeSheet: raw.chargeSheet,
+  });
+  const strategy =
+    raw.consentToAi !== false && aiConfigured() && detection.primary
+      ? await assessStrategy(
+          brief.text,
+          { primary: detection.primary, secondary: detection.secondary },
+          { subjectType: 'submission', subjectId: id, actor },
+        )
       : null;
-  const criminalEncrypted = criminal ? await encryptJson(criminal) : null;
+  const strategyEncrypted = strategy ? await encryptJson(strategy) : null;
   const nextAction =
-    criminal?.strategy.immediatePreservation[0] ||
+    strategy?.winningStrategyRoadmap.immediateActions_0_to_72h[0] ||
     result.nextActions?.[0] ||
     'Attorney to review the intake and confirm next steps.';
   const caseNumber = existing.matterCase ? null : await nextCaseNumber();
@@ -310,7 +321,7 @@ export async function assessSubmission(id: string, actor: Actor = {}): Promise<P
       confidence: Number.isFinite(result.confidence) ? result.confidence : 0,
       popiaNotes: ensureStringArray(result.popiaNotes),
       rawRedactedBrief: brief as unknown as Record<string, unknown>,
-      criminalEncrypted,
+      strategyEncrypted,
     };
     const [savedAssessment] = await tx
       .insert(assessments)

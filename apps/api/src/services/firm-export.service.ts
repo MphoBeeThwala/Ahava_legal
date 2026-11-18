@@ -77,9 +77,9 @@ export async function exportFirm(firm: FirmRow): Promise<FirmExport> {
 
       const assessmentRows = await db().select().from(schema.assessments);
       tables.assessments = await Promise.all(
-        assessmentRows.map(async ({ criminalEncrypted, ...rest }) => ({
+        assessmentRows.map(async ({ strategyEncrypted, ...rest }) => ({
           ...rest,
-          criminal: criminalEncrypted ? await decryptJson(criminalEncrypted) : null,
+          strategy: strategyEncrypted ? await decryptJson(strategyEncrypted) : null,
         })),
       );
 

@@ -1,5 +1,5 @@
 import type { Assessment, PublicSubmission } from '@ahava88/shared';
-import CriminalAssessmentView from './CriminalAssessmentView';
+import StrategyAssessmentView from './StrategyAssessmentView';
 
 function ensureStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -69,9 +69,9 @@ function AssessmentCard({ matter, onGoToIntake, onGoToCases }: AssessmentCardPro
         {assessment.summary || matter.summary || 'The matter has not been assessed yet.'}
       </p>
 
-      {assessment.criminal ? (
-        // The merit assessment replaces the generic triage lists.
-        <CriminalAssessmentView assessment={assessment.criminal} />
+      {assessment.strategy ? (
+        // The strategy assessment replaces the generic triage lists.
+        <StrategyAssessmentView assessment={assessment.strategy} />
       ) : (
         <>
           <Section title="Key facts" items={assessment.keyFacts} />

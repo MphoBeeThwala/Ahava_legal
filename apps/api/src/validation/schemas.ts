@@ -149,6 +149,8 @@ export const intakeSubmissionSchema = z.object({
   matterSummary: requiredText(MAX_TEXT),
   requestedOutcome: optionalText(MAX_TEXT).transform((value) => value ?? ''),
   documentsMentioned: optionalText(MAX_TEXT).transform((value) => value ?? ''),
+  /** Criminal matters: the charge sheet (J15). */
+  chargeSheet: optionalText(MAX_TEXT).transform((value) => value ?? ''),
   urgencyHint: optionalText(40).transform((value) => value ?? 'unspecified'),
   preferredLanguage: optionalText(40).transform((value) => value ?? 'English'),
   /** Without it the intake is still taken, marked "not assessed by AI". */

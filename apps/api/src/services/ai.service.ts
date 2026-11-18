@@ -130,6 +130,8 @@ export interface TriageInput {
   matterSummary: string;
   requestedOutcome?: string;
   documentsMentioned?: string;
+  /** Criminal matters: the charge sheet (J15). */
+  chargeSheet?: string;
   people: KnownPerson[];
   /** false: the client declined AI; nothing is sent to a model. */
   consentToAi?: boolean;
@@ -179,6 +181,7 @@ export function triageBrief(input: TriageInput) {
     `Facts:\n${input.matterSummary}`,
     input.requestedOutcome ? `Outcome the client wants:\n${input.requestedOutcome}` : '',
     input.documentsMentioned ? `Documents mentioned:\n${input.documentsMentioned}` : '',
+    input.chargeSheet ? `Charge sheet (J15):\n${input.chargeSheet}` : '',
   ].filter(Boolean);
   return deidentify(sections.join('\n\n'), input.people);
 }
