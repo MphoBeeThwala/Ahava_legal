@@ -49,6 +49,50 @@ async function tokensThisMonth(now = new Date()): Promise<number> {
   return row?.tokens ?? 0;
 }
 
+const JSON_RETRY = [
+  'Your previous answer could not be read as JSON (it may have been cut off).',
+  'Answer again with one complete, valid JSON object and nothing else: no prose, no code fence.',
+  'Be concise: at most 5 items in each list and at most 40 words in each item.',
+].join(' ');
+
+/**
+ * Calls the model for a JSON answer. A malformed or cut-off answer is retried
+ * once with an instruction to be concise; if that also fails, the user sees
+ * the error (never a made-up answer).
+ */
+export async function callModelForJson<T>(
+  request: AiRequest,
+  context: CallContext,
+): Promise<{ result: AiResult; value: T }> {
+  const first = await callModel(request, context);
+  try {
+    return { result: first, value: parseJsonAnswer<T>(first.text) };
+  } catch {
+    console.warn(
+      JSON.stringify({
+        level: 'warn',
+        message: 'ai_answer_not_json_retrying',
+        purpose: context.purpose,
+        provider: first.provider,
+        stopReason: first.stopReason,
+        outputTokens: first.outputTokens,
+      }),
+    );
+  }
+  const second = await callModel(
+    { ...request, system: `${request.system}\n\n${JSON_RETRY}` },
+    context,
+  );
+  try {
+    return { result: second, value: parseJsonAnswer<T>(second.text) };
+  } catch {
+    throw httpError(
+      'The AI answer was not in the expected format twice (it may have been cut off). Please try again.',
+      502,
+    );
+  }
+}
+
 export async function callModel(request: AiRequest, context: CallContext): Promise<AiResult> {
   const client = aiClient();
   if ((await tokensThisMonth()) >= monthlyTokenLimit()) {
@@ -253,16 +297,15 @@ export async function triage(
   if (!aiConfigured()) {
     return { assessment: notAssessed(input, 'not_configured'), brief: sent };
   }
-  const result = await callModel(
+  const { result, value: parsed } = await callModelForJson<Record<string, unknown>>(
     {
       system: TRIAGE_SYSTEM,
       messages: [{ role: 'user', content: brief.text }],
-      maxTokens: 1500,
+      maxTokens: 2000,
       temperature: 0,
     },
     { ...context, purpose: 'triage' },
   );
-  const parsed = parseJsonAnswer<Record<string, unknown>>(result.text);
   const urgency = String(parsed.urgency ?? '').toLowerCase();
   const confidence = Number(parsed.confidence);
   return {

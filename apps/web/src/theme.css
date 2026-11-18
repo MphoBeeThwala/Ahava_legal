@@ -1126,3 +1126,12 @@ body,
 .strategy-footnote {
   font-size: 0.8rem;
 }
+
+.duplicate-notice p {
+  margin: 0 0 10px;
+}
+.duplicate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -167,11 +167,95 @@ async function selectSubmissions(where?: SQL, limit = 100) {
     .limit(limit);
 }
 
+/** Practice area and matter summary, normalised so retyping or spacing does not matter. */
+function summaryKey(practiceArea: string, matterSummary: string): string {
+  const words = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim();
+  return `intake-summary:${words(practiceArea)}|${words(matterSummary)}`;
+}
+
+/** How far back an identical intake counts as a duplicate. */
+const DUPLICATE_WINDOW_DAYS = 90;
+/** How far back the same client in the same practice area counts as a likely duplicate. */
+const SAME_CLIENT_WINDOW_HOURS = 24;
+
+/**
+ * Refuses (409) an intake that looks like one already on record: the same
+ * client (by email) with the same practice area and summary in the last 90
+ * days, or the same client and practice area in the last 24 hours. The
+ * answer names the existing intake by its numbers only; the client can
+ * resend with allowDuplicate to take it anyway.
+ */
+async function refuseDuplicate(
+  email: string,
+  summaryLookup: string,
+  practiceArea: string,
+): Promise<void> {
+  const emails = await blindIndexCandidates(email);
+  const since = new Date(Date.now() - DUPLICATE_WINDOW_DAYS * 86_400_000);
+  const recent = new Date(Date.now() - SAME_CLIENT_WINDOW_HOURS * 3_600_000);
+  const [match] = await db()
+    .select({
+      id: submissions.id,
+      clientLabel: submissions.clientLabel,
+      createdAt: submissions.createdAt,
+      summaryLookup: submissions.summaryLookup,
+      caseNumber: cases.caseNumber,
+    })
+    .from(submissions)
+    .leftJoin(cases, eq(cases.id, submissions.caseId))
+    .where(
+      and(
+        inArray(submissions.emailLookup, emails),
+        or(
+          and(
+            eq(submissions.summaryLookup, summaryLookup),
+            sql`${submissions.createdAt} > ${since}`,
+          ),
+          and(
+            eq(submissions.practiceArea, practiceArea),
+            sql`${submissions.createdAt} > ${recent}`,
+          ),
+        ),
+      ),
+    )
+    .orderBy(desc(submissions.createdAt))
+    .limit(1);
+  if (!match) {
+    return;
+  }
+  const same = match.summaryLookup === summaryLookup;
+  throw httpError(
+    same
+      ? `This intake is already on record (${match.clientLabel}${match.caseNumber ? `, ${match.caseNumber}` : ''}). Open that one instead of taking it again.`
+      : `This client already has a ${practiceArea} intake from the last ${SAME_CLIENT_WINDOW_HOURS} hours (${match.clientLabel}${match.caseNumber ? `, ${match.caseNumber}` : ''}). Is this the same matter?`,
+    409,
+    {
+      duplicate: {
+        submissionId: match.id,
+        clientLabel: match.clientLabel,
+        caseNumber: match.caseNumber ?? null,
+        createdAt: iso(match.createdAt),
+        identical: same,
+      },
+    },
+  );
+}
+
 export async function createSubmission(
   input: unknown,
   actor: Actor = {},
 ): Promise<PublicSubmission> {
-  const submission = parse(intakeSubmissionSchema, input);
+  const { allowDuplicate, ...submission } = parse(intakeSubmissionSchema, input);
+  const summaryLookup = await blindIndex(
+    summaryKey(submission.practiceArea, submission.matterSummary),
+  );
+  if (!allowDuplicate) {
+    await refuseDuplicate(submission.email, summaryLookup, submission.practiceArea);
+  }
   const summary = deidentify(submission.matterSummary, intakePeople(submission));
 
   const [saved] = await db()
@@ -185,6 +269,7 @@ export async function createSubmission(
       summaryRedacted: summary.text,
       rawPayloadEncrypted: await encryptJson(submission),
       emailLookup: await blindIndex(submission.email),
+      summaryLookup,
       consentToAi: submission.consentToAi,
       consentToStorage: submission.consentToStorage,
     })
@@ -256,12 +341,19 @@ function jobError(error: unknown): string {
  * the same user; the client polls getSubmission() for the result. A job
  * already running is not started twice.
  */
-export async function startAssessment(id: string, actor: Actor = {}): Promise<PublicSubmission> {
+export async function startAssessment(
+  id: string,
+  actor: Actor = {},
+  options: { force?: boolean } = {},
+): Promise<PublicSubmission> {
   const [existing] = await selectSubmissions(eq(submissions.id, id), 1);
   if (!existing) {
     throw httpError('Intake submission not found', 404);
   }
-  if (assessmentJob(existing.submission)?.state === 'running') {
+  if (
+    assessmentJob(existing.submission)?.state === 'running' ||
+    (!options.force && alreadyAssessed(existing.assessment))
+  ) {
     return toPublicSubmission(existing.submission, existing.assessment, existing.matterCase);
   }
   const [marked] = await db()
@@ -285,7 +377,7 @@ export async function startAssessment(id: string, actor: Actor = {}): Promise<Pu
     });
   afterCommit(async () => {
     // Not awaited: the response must not wait for the AI.
-    void asUser(() => assessSubmission(id, actor)).catch(async (error: unknown) => {
+    void asUser(() => assessSubmission(id, actor, options)).catch(async (error: unknown) => {
       if (!(error instanceof HttpError)) {
         reportError(error, { path: 'intake.assess.background' });
       }
@@ -349,10 +441,24 @@ export async function findSubmissionsByEmail(email: string): Promise<PublicSubmi
  * Assesses an intake and opens (or refreshes) its matter. The user who opens
  * the matter becomes its lead (matter access, see matter-access.service.ts).
  */
-export async function assessSubmission(id: string, actor: Actor = {}): Promise<PublicSubmission> {
+/** true when the intake already has an AI assessment (its text never changes after intake). */
+function alreadyAssessed(assessment: AssessmentRow | null): boolean {
+  return Boolean(assessment && assessment.provider !== 'none');
+}
+
+export async function assessSubmission(
+  id: string,
+  actor: Actor = {},
+  options: { force?: boolean } = {},
+): Promise<PublicSubmission> {
   const [existing] = await selectSubmissions(eq(submissions.id, id), 1);
   if (!existing) {
     throw httpError('Intake submission not found', 404);
+  }
+  // Nothing in the intake has changed since it was assessed: answer with the
+  // assessment on record rather than paying for the same AI calls again.
+  if (!options.force && alreadyAssessed(existing.assessment)) {
+    return toPublicSubmission(existing.submission, existing.assessment, existing.matterCase);
   }
 
   const raw = await decryptJson<IntakeSubmission>(existing.submission.rawPayloadEncrypted);

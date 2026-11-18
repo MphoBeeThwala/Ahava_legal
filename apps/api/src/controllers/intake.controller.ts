@@ -36,11 +36,17 @@ async function getSubmission(req: Request, res: Response) {
 async function assessSubmission(req: Request, res: Response) {
   try {
     // ?background=1: start it and answer 202; the client polls the submission.
+    // ?force=1: assess again even though the intake already has an assessment.
+    const force = req.query.force === '1' || req.query.force === 'true';
     if (req.query.background === '1' || req.query.background === 'true') {
-      const started = await intakeService.startAssessment(String(req.params.id), req.auth);
-      return res.status(202).json(started);
+      const started = await intakeService.startAssessment(String(req.params.id), req.auth, {
+        force,
+      });
+      return res.status(started.assessmentJob?.state === 'running' ? 202 : 200).json(started);
     }
-    const assessment = await intakeService.assessSubmission(String(req.params.id), req.auth);
+    const assessment = await intakeService.assessSubmission(String(req.params.id), req.auth, {
+      force,
+    });
     res.status(200).json(assessment);
   } catch (error) {
     sendError(res, error);

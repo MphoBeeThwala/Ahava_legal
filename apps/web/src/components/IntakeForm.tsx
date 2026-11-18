@@ -3,7 +3,7 @@ import type { IntakeSubmissionInput } from '@ahava88/shared';
 import Field from './Field';
 import type { Notice } from './DismissibleNotice';
 
-type IntakeFormState = Required<IntakeSubmissionInput>;
+type IntakeFormState = Required<Omit<IntakeSubmissionInput, 'allowDuplicate'>>;
 
 const defaultState: IntakeFormState = {
   fullName: '',

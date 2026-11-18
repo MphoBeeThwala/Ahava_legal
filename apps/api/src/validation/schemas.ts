@@ -156,6 +156,8 @@ export const intakeSubmissionSchema = z.object({
   /** Without it the intake is still taken, marked "not assessed by AI". */
   consentToAi: z.boolean('Record whether the client consents to AI assessment and research'),
   consentToStorage: z.literal(true, 'Consent to store the client record is required'),
+  /** Take the intake even though it looks like one already on record. */
+  allowDuplicate: z.boolean().optional(),
 });
 export type IntakeSubmission = z.infer<typeof intakeSubmissionSchema>;
 
