@@ -28,7 +28,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // No source maps in the build: they would publish the full frontend source.
+    sourcemap: false,
   },
   test: {
     environment: 'jsdom',
