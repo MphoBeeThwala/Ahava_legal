@@ -71,22 +71,42 @@ function validateConfig(env: NodeJS.ProcessEnv = process.env): string[] {
   if (env.OBJECT_STORE && !['filesystem', 'azure-blob'].includes(env.OBJECT_STORE)) {
     problems.push('OBJECT_STORE must be filesystem or azure-blob');
   }
-  const ai = String(env.AI_PROVIDER || '')
+  for (const prefix of ['AI_', 'AI_FALLBACK_']) {
+    const provider = String(env[`${prefix}PROVIDER`] || '')
+      .trim()
+      .toLowerCase();
+    if (!provider || provider === 'none') {
+      continue;
+    }
+    if (!['foundry', 'anthropic', 'gemini', 'deepseek'].includes(provider)) {
+      problems.push(`${prefix}PROVIDER must be foundry, anthropic, gemini, deepseek or none`);
+      continue;
+    }
+    if (provider === 'foundry' && !String(env[`${prefix}ENDPOINT`] || '').trim()) {
+      problems.push(
+        `${prefix}PROVIDER=foundry needs ${prefix}ENDPOINT (https://<resource>.services.ai.azure.com/anthropic)`,
+      );
+    }
+    const key =
+      String(env[`${prefix}API_KEY`] || '').trim() ||
+      (prefix === 'AI_' && provider === 'anthropic'
+        ? String(env.ANTHROPIC_API_KEY || '').trim()
+        : '');
+    if (provider !== 'foundry' && !key) {
+      problems.push(`${prefix}PROVIDER=${provider} needs ${prefix}API_KEY`);
+    }
+    if (!String(env[`${prefix}MODEL`] || '').trim()) {
+      problems.push(`${prefix}PROVIDER is set but ${prefix}MODEL is not`);
+    }
+  }
+  const primaryAi = String(env.AI_PROVIDER || '')
     .trim()
     .toLowerCase();
-  if (ai && !['foundry', 'anthropic', 'none'].includes(ai)) {
-    problems.push('AI_PROVIDER must be foundry, anthropic or none');
-  }
-  if (ai === 'foundry' && !String(env.AI_ENDPOINT || '').trim()) {
-    problems.push(
-      'AI_PROVIDER=foundry needs AI_ENDPOINT (https://<resource>.services.ai.azure.com/anthropic)',
-    );
-  }
-  if (ai === 'anthropic' && !String(env.AI_API_KEY || env.ANTHROPIC_API_KEY || '').trim()) {
-    problems.push('AI_PROVIDER=anthropic needs AI_API_KEY');
-  }
-  if ((ai === 'foundry' || ai === 'anthropic') && !String(env.AI_MODEL || '').trim()) {
-    problems.push('AI_PROVIDER is set but AI_MODEL is not');
+  const fallbackAi = String(env.AI_FALLBACK_PROVIDER || '')
+    .trim()
+    .toLowerCase();
+  if (fallbackAi && fallbackAi !== 'none' && (!primaryAi || primaryAi === 'none')) {
+    problems.push('AI_FALLBACK_PROVIDER is set but AI_PROVIDER is not');
   }
   const payfast = ['PAYFAST_MERCHANT_ID', 'PAYFAST_MERCHANT_KEY', 'PAYFAST_PASSPHRASE'].filter(
     (name) => String(env[name] || '').trim(),
@@ -129,16 +149,28 @@ function configWarnings(env: NodeJS.ProcessEnv = process.env): string[] {
       'SMTP_URL is not set (nor SMTP2GO_API_KEY): invite and reset links are shown to administrators but not emailed',
     );
   }
-  if (
-    !['foundry', 'anthropic'].includes(
-      String(env.AI_PROVIDER || '')
-        .trim()
-        .toLowerCase(),
-    )
-  ) {
+  const ai = String(env.AI_PROVIDER || '')
+    .trim()
+    .toLowerCase();
+  if (!['foundry', 'anthropic', 'gemini', 'deepseek'].includes(ai)) {
     warnings.push('AI is not configured (AI_PROVIDER): intakes open as "not assessed"');
-  } else if (String(env.AI_PROVIDER).trim().toLowerCase() === 'anthropic') {
+  } else if (ai === 'anthropic') {
     warnings.push('AI_PROVIDER=anthropic: production should use Microsoft Foundry');
+  }
+  for (const name of ['AI_PROVIDER', 'AI_FALLBACK_PROVIDER']) {
+    const provider = String(env[name] || '')
+      .trim()
+      .toLowerCase();
+    if (provider === 'gemini') {
+      warnings.push(
+        `${name}=gemini is for testing: on the free tier Google may use prompts to improve its products; use made-up matters only`,
+      );
+    }
+    if (provider === 'deepseek') {
+      warnings.push(
+        `${name}=deepseek is for testing: DeepSeek stores data in China (POPIA s72); use made-up matters only`,
+      );
+    }
   }
   if (!String(env.PAYFAST_MERCHANT_ID || '').trim()) {
     warnings.push('PayFast is not configured: firms cannot subscribe online');

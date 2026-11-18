@@ -105,6 +105,7 @@ When the firms table is empty, the server creates a `default` firm from these va
 - `/ready` returns 503 until the database answers.
 - **AI** goes through one client (`apps/api/src/lib/ai-client.ts`):
   - **Providers.** `AI_PROVIDER=foundry` (Claude in Microsoft Foundry at `AI_ENDPOINT`, keyless via the managed identity or with `AI_API_KEY`) or `anthropic` (development). `AI_MODEL` / `AI_RESEARCH_MODEL` name the model or deployment.
+  - **Testing providers and a fallback.** `AI_PROVIDER=gemini` (Google Gemini API) or `deepseek` (DeepSeek API, data stored in China) are for testing with made-up matters only; production warns about them. `AI_FALLBACK_PROVIDER`, `AI_FALLBACK_API_KEY`, `AI_FALLBACK_MODEL` (and optionally `AI_FALLBACK_RESEARCH_MODEL` / `AI_FALLBACK_ENDPOINT`) name a second model tried when the first fails; if both fail, the user sees the error. `ai_calls.provider` records which one answered.
   - **No AI.** Without a provider, intakes open as "not assessed".
   - **Failures.** A failed AI call is an error the user can retry; there is no rules-based fallback.
   - **Logging and limits.** Every call is logged per firm (tokens, encrypted de-identified prompt and answer) and capped by `AI_FIRM_MONTHLY_TOKENS`. Administrators see usage at `GET /api/ai/usage`.
