@@ -207,7 +207,23 @@ if (frontendBuildPath) {
   console.warn(`Frontend build not found. Checked: ${frontendBuildCandidates.join(', ')}`);
 }
 
+/** Body-parser failures, answered without the parser's own message. */
+const BODY_ERRORS: Record<string, string> = {
+  'entity.parse.failed': 'The request body is not valid JSON.',
+  'entity.too.large': 'The request is too large.',
+  'request.aborted': 'The request was interrupted.',
+  'request.size.invalid': 'The request body could not be read.',
+  'encoding.unsupported': 'The request body could not be read.',
+  'charset.unsupported': 'The request body could not be read.',
+  'stream.encoding.set': 'The request body could not be read.',
+};
+
 app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
+  const bodyError = BODY_ERRORS[String((error as { type?: unknown } | null)?.type ?? '')];
+  if (bodyError) {
+    res.status(errorStatus(error, 400)).json({ message: bodyError, requestId: req.requestId });
+    return;
+  }
   const statusCode = errorStatus(error);
   if (statusCode >= 500) {
     reportError(error, { requestId: req.requestId, path: req.originalUrl });
