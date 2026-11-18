@@ -111,6 +111,7 @@ When the firms table is empty, the server creates a `default` firm from these va
   - **De-identification.** Everything sent is de-identified first (`services/deidentify.ts`); research briefs are previewed, edited and confirmed by the attorney.
   - **Research.** Answers come only from approved sources (`ops sources …`, see [`docs/runbooks/research-sources.md`](docs/runbooks/research-sources.md)), ranked by the hierarchy of authority, with repealed law excluded. Every claim must cite a retrieved passage, and code removes any that don't. An attorney (`research.approve`) approves the memo, which is kept with its sources.
   - **Legislation feed.** `LAWS_AFRICA_TOKEN` enables the weekly Laws.Africa sync.
+  - **Laws.Africa Knowledge Bases.** With `LAWS_AFRICA_TOKEN`, `LAWS_AFRICA_KB_CODES` and the `laws-africa-kb` source approved, research also retrieves matching South African legislation and judgments live from Laws.Africa (see `docs/runbooks/research-sources.md`).
   - **Evaluation.** `npm run eval -w apps/api` runs the evaluation set before model or prompt changes.
 - Interim hosting is Render (`render.yaml`: `npm ci --include=dev && npm run build`, then `npm start`).
 - **Azure** (South Africa North, DR South Africa West): Terraform in `infra/terraform`, the container image from `Dockerfile`, GitHub Actions for CI (`ci.yml`, including an image smoke test and `terraform validate`), infrastructure (`infra.yml`) and releases (`deploy.yml`). See [`docs/runbooks/deployment.md`](docs/runbooks/deployment.md).

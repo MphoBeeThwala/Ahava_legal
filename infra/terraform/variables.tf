@@ -268,6 +268,12 @@ variable "ai_foundry_resource_id" {
   default     = ""
 }
 
+variable "laws_africa_kb_codes" {
+  description = "Laws.Africa Knowledge Base codes searched during research (comma-separated); empty to turn off. The token is the laws-africa-token Key Vault secret."
+  type        = string
+  default     = ""
+}
+
 variable "ai_firm_monthly_tokens" {
   description = "Default monthly AI token allowance per firm."
   type        = number

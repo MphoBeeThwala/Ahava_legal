@@ -15,6 +15,23 @@ npm run ops -w apps/api -- sources sync-laws-africa [--place za] [--limit N]   #
 npm run ops -w apps/api -- sources sync-sca [--listing <url>] [--pages N] [--limit N]   # weekly job
 ```
 
+### Laws.Africa Knowledge Bases (live retrieval)
+
+Laws.Africa hosts searchable collections of South African legislation and judgments (the content behind lawlibrary.org.za) and returns the best-matching portions, with their public links, for each query. Research searches them alongside the approved corpus; the model may still cite only what was retrieved, and each cited passage links to its public source.
+
+1. Create a platform account at laws.africa and an API token. The free Sandbox plan (one country, about 100 calls a day) is for trying it; production use in this commercial product needs a paid plan (Build or higher). Laws.Africa's content is CC BY-NC-SA for non-commercial use; commercial use is under the platform's terms, so record the plan and its terms when registering.
+2. Find the Knowledge Base codes: `curl -H "Authorization: Bearer $LAWS_AFRICA_TOKEN" https://api.laws.africa/ai/v1/knowledge-bases`.
+3. Set `LAWS_AFRICA_TOKEN` (a secret) and `LAWS_AFRICA_KB_CODES` (e.g. the South African legislation and judgments codes). `LAWS_AFRICA_KB_QUERIES` (default 2) caps the queries sent to each Knowledge Base per question.
+4. Register the source, which turns retrieval on:
+   ```
+   npm run ops -w apps/api -- sources add --code laws-africa-kb --name "Laws.Africa Knowledge Bases" \
+     --kind legislation --publisher "Laws.Africa" --url https://laws.africa \
+     --licence "Laws.Africa Legal Knowledge Platform, <plan>, terms accepted <date>" --approved-by <operator email>
+   ```
+   `sources suspend --code laws-africa-kb` turns it off at once.
+
+Only the de-identified search queries are sent, never the brief or anything about the client. If Laws.Africa can't be reached or the daily limit is reached, the answer says so in its gaps and uses only the corpus. Results are not stored in the corpus; the passages cited are kept with the research record, like any other source. Attribute Laws.Africa wherever its content is shown (the source name on each cited passage does this).
+
 ### Supreme Court of Appeal judgments (free)
 
 The SCA publishes its judgments on its own website; they are official texts (Copyright Act s12(8)(a)). Register the source once, then sync weekly (or set `SCA_SYNC_INTERVAL_HOURS=168`):

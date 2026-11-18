@@ -20,6 +20,7 @@ import {
 import { parseJsonAnswer } from '../lib/ai-client';
 import { callModel } from './ai.service';
 import { search, type SearchHit } from './corpus.service';
+import { kbEnabled, retrieveFromKnowledgeBases } from './laws-africa-kb';
 import type { Actor } from '../lib/actor';
 
 const PLAN_SYSTEM = [
@@ -157,14 +158,26 @@ export async function answerBrief(
     .filter(Boolean)
     .slice(0, 6);
 
-  const sources = toCited(await search(cleanQueries, 12));
+  // Our approved corpus first, then Laws.Africa's Knowledge Bases where enabled.
+  const corpusHits = await search(cleanQueries, 12);
+  const kb = (await kbEnabled())
+    ? await retrieveFromKnowledgeBases(cleanQueries)
+    : { hits: [], failures: [] };
+  const seen = new Set(corpusHits.map((hit) => hit.url).filter(Boolean));
+  const kbHits = kb.hits.filter((hit) => !seen.has(hit.url)).slice(0, 8);
+  const sources = toCited([...corpusHits, ...kbHits]);
+  const retrievalGaps = kb.failures.length
+    ? [
+        `Laws.Africa could not be searched (${kb.failures.join('; ')}): only the firm's approved corpus was used.`,
+      ]
+    : [];
   const generatedAt = new Date().toISOString();
   if (!sources.length) {
     return {
       noAuthority: true,
       claims: [],
       removed: [],
-      gaps: ['No passage in the approved sources matched this question.'],
+      gaps: ['No passage in the approved sources matched this question.', ...retrievalGaps],
       sources: [],
       queries: cleanQueries,
       model: plan.model,
@@ -189,10 +202,10 @@ export async function answerBrief(
   );
   const answer = parseJsonAnswer<ModelAnswer>(result.text);
   const { claims, removed } = verifyClaims(answer, sources);
-  const gaps = (Array.isArray(answer.gaps) ? answer.gaps : [])
-    .map(String)
-    .filter(Boolean)
-    .slice(0, 20);
+  const gaps = [
+    ...(Array.isArray(answer.gaps) ? answer.gaps : []).map(String).filter(Boolean).slice(0, 20),
+    ...retrievalGaps,
+  ];
   return {
     noAuthority: claims.length === 0,
     claims,
