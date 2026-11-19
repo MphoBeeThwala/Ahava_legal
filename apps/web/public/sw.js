@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `practice-workspace-shell-${CACHE_VERSION}`;
 const SHELL = ['/', '/index.html', '/offline.html', '/manifest.json', '/icons/icon.svg'];
 

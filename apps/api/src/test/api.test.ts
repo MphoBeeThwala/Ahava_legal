@@ -32,6 +32,11 @@ describe('public endpoints', () => {
     expect(res.body.firmName).toBe('Nkosi & Partners Inc.');
     expect(res.body.casePrefix).toBe('NKP');
     expect(res.body.platform.legalName).toBe('Ahava on 88 (Pty) Ltd');
+    expect(res.body.platform).toMatchObject({
+      productName: 'Ahava Legal',
+      contactEmail: 'legal@ahavaon88.co.za',
+      contactPhone: '+27 65 791 8705',
+    });
   });
 
   test('security headers and request id are set', async () => {

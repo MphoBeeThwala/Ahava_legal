@@ -6,6 +6,11 @@
 export interface PlatformInfo {
   legalName: string;
   supportEmail: string | null;
+  /** The platform's own product name (shown on the About page, not as the firm's brand). */
+  productName?: string;
+  /** Who to contact about the software itself. */
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 /** A firm's white-label brand, returned by GET /api/tenant/branding. */
@@ -26,6 +31,10 @@ export interface PublicBranding extends FirmBrand {
 }
 
 export const PLATFORM_LEGAL_NAME = 'Ahava on 88 (Pty) Ltd';
+/** The platform's product name and contact details (the owner's, not any firm's). */
+export const PLATFORM_PRODUCT_NAME = 'Ahava Legal';
+export const PLATFORM_CONTACT_EMAIL = 'legal@ahavaon88.co.za';
+export const PLATFORM_CONTACT_PHONE = '+27 65 791 8705';
 
 export const DEFAULT_FIRM_BRAND: FirmBrand = Object.freeze({
   firmName: 'Your Firm',

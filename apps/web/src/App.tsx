@@ -35,6 +35,7 @@ import SupportSignIn from './auth/SupportSignIn';
 import type { Notice } from './components/DismissibleNotice';
 import IntakeForm from './components/IntakeForm';
 import DraftingPanel from './components/DraftingPanel';
+import AboutPage from './components/AboutPage';
 import AssessmentCard from './components/AssessmentCard';
 import CaseTable from './components/CaseTable';
 import CaseWorkspace from './components/CaseWorkspace';
@@ -195,21 +196,24 @@ function LoadingShell() {
   );
 }
 
-function BrandMark({ branding }: { branding: PublicBranding }) {
-  if (branding.logoUrl) {
-    return (
-      <img
-        className="brand-mark brand-logo"
-        src={branding.logoUrl}
-        alt={`${branding.firmName} logo`}
-      />
-    );
-  }
-
+/** The firm's logo (or initial); it opens the About page. */
+function BrandMark({ branding, onOpen }: { branding: PublicBranding; onOpen: () => void }) {
   return (
-    <div className="brand-mark" aria-hidden="true">
-      {(branding.firmShortName || 'F').trim().charAt(0).toUpperCase()}
-    </div>
+    <button
+      type="button"
+      className="brand-home"
+      onClick={onOpen}
+      aria-label={`About ${branding.platform.productName || 'this software'}`}
+      title="About this software"
+    >
+      {branding.logoUrl ? (
+        <img className="brand-logo" src={branding.logoUrl} alt={`${branding.firmName} logo`} />
+      ) : (
+        <span className="brand-mark" aria-hidden="true">
+          {(branding.firmShortName || 'F').trim().charAt(0).toUpperCase()}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -265,6 +269,24 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
+  // The About page (#about), opened from the logo; signed in or not.
+  const [aboutOpen, setAboutOpen] = useState(() => window.location.hash === '#about');
+  useEffect(() => {
+    const onHash = () => setAboutOpen(window.location.hash === '#about');
+    window.addEventListener('popstate', onHash);
+    window.addEventListener('hashchange', onHash);
+    return () => {
+      window.removeEventListener('popstate', onHash);
+      window.removeEventListener('hashchange', onHash);
+    };
+  }, []);
+  const openAbout = useCallback(() => {
+    if (window.location.hash !== '#about') {
+      window.history.pushState(null, '', '#about');
+    }
+    setAboutOpen(true);
+    window.scrollTo({ top: 0 });
+  }, []);
 
   const [headerCondensed, setHeaderCondensed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -620,6 +642,24 @@ function App() {
     }
   };
 
+  if (aboutOpen) {
+    return (
+      <AboutPage
+        branding={branding}
+        signedIn={Boolean(currentUser)}
+        onClose={() => {
+          setAboutOpen(false);
+          window.history.pushState(
+            null,
+            '',
+            currentUser ? `#${activeSection}` : window.location.pathname + window.location.search,
+          );
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
+  }
+
   if (!authReady || loading) {
     return <LoadingShell />;
   }
@@ -629,7 +669,7 @@ function App() {
       <div className="app-shell auth-shell">
         <header className="hero">
           <div className="hero-copy">
-            <BrandMark branding={branding} />
+            <BrandMark branding={branding} onOpen={openAbout} />
             <div>
               <p className="eyebrow">{branding.firmName}</p>
               <h1>Legal practice management platform</h1>
@@ -738,7 +778,7 @@ function App() {
       <div className={`workspace-header ${headerCondensed ? 'workspace-header-condensed' : ''}`}>
         <header className="hero hero-compact">
           <div className="hero-copy">
-            <BrandMark branding={branding} />
+            <BrandMark branding={branding} onOpen={openAbout} />
             <div>
               <p className="eyebrow">{branding.firmName}</p>
               <h1 aria-live="polite">{activeNav.title}</h1>
