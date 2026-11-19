@@ -8,7 +8,10 @@
 
 import {
   DEFAULT_FIRM_BRAND,
+  PLATFORM_CONTACT_EMAIL,
+  PLATFORM_CONTACT_PHONE,
   PLATFORM_LEGAL_NAME,
+  PLATFORM_PRODUCT_NAME,
   isHexColor,
   type FirmBrand,
   type PublicBranding,
@@ -21,6 +24,9 @@ function platformInfo() {
   return {
     legalName: PLATFORM_LEGAL_NAME,
     supportEmail: process.env.PLATFORM_SUPPORT_EMAIL || null,
+    productName: PLATFORM_PRODUCT_NAME,
+    contactEmail: process.env.PLATFORM_CONTACT_EMAIL || PLATFORM_CONTACT_EMAIL,
+    contactPhone: process.env.PLATFORM_CONTACT_PHONE || PLATFORM_CONTACT_PHONE,
   };
 }
 

@@ -1,0 +1,300 @@
+/* About page: bottle-green leather and brass, with marginal headings set
+   beside the text the way South African statutes print them. */
+.about {
+  --about-green: #0e3b2e;
+  --about-ink: #08130f;
+  --about-brass: #d8b66e;
+  --about-ivory: #eee8da;
+  --about-sage: #a3b5ab;
+  --about-rule: rgba(216, 182, 110, 0.28);
+  min-height: 100vh;
+  background: var(--about-ink);
+  color: var(--about-ivory);
+  font-family: Inter, 'Segoe UI', Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.about-inner {
+  width: min(1080px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.about h1,
+.about h2,
+.about-wordmark,
+.about-stage {
+  font-family: 'Libre Caslon Text', Georgia, serif;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- hero */
+
+.about-hero {
+  background: var(--about-green);
+  border-bottom: 1px solid var(--about-rule);
+  padding: 40px 0 64px;
+}
+
+.about-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.35rem;
+  color: var(--about-brass);
+  margin-bottom: 72px;
+}
+
+.about-wordmark img {
+  border-radius: 10px;
+}
+
+.about-hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  max-width: 20ch;
+  margin: 0 0 24px;
+}
+
+.about-lede {
+  font-size: 1.15rem;
+  color: var(--about-sage);
+  max-width: 58ch;
+  margin: 0 0 32px;
+}
+
+.about-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.about-primary,
+.about-secondary {
+  font: inherit;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 11px 22px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.about-primary {
+  background: var(--about-brass);
+  color: #1a1408;
+  border: 1px solid var(--about-brass);
+}
+
+.about-primary:hover {
+  background: #e4c787;
+}
+
+.about-secondary {
+  color: var(--about-ivory);
+  border: 1px solid rgba(238, 232, 218, 0.35);
+}
+
+.about-secondary:hover {
+  border-color: var(--about-ivory);
+}
+
+.about :focus-visible {
+  outline: 2px solid var(--about-brass);
+  outline-offset: 3px;
+}
+
+.about-licence {
+  margin: 28px 0 0;
+  font-size: 0.9rem;
+  color: var(--about-sage);
+}
+
+/* ------------------------------------------------------------ lifecycle */
+
+.about-body {
+  padding: 64px 0 24px;
+}
+
+.about-lifecycle h2 {
+  font-size: 1.6rem;
+  margin: 0 0 28px;
+}
+
+.about-lifecycle ol {
+  list-style: none;
+  counter-reset: stage;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0 20px;
+  margin: 0 0 80px;
+  padding: 0;
+  border-top: 1px solid var(--about-brass);
+}
+
+.about-lifecycle li {
+  counter-increment: stage;
+  position: relative;
+  padding-top: 26px;
+}
+
+/* A stop on the brass rule for each stage. */
+.about-lifecycle li::before {
+  content: counter(stage);
+  position: absolute;
+  top: -14px;
+  left: 0;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--about-ink);
+  border: 1px solid var(--about-brass);
+  color: var(--about-brass);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.about-stage {
+  display: block;
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.about-stage-text {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--about-sage);
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------- marginal-note sections */
+
+.about-section {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 32px;
+  padding: 36px 0;
+  border-top: 1px solid rgba(238, 232, 218, 0.1);
+}
+
+.about-margin {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--about-brass);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.about-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 40px;
+  margin: 0;
+}
+
+.about-features dt {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.about-features dd {
+  margin: 0;
+  color: var(--about-sage);
+}
+
+.about-safeguards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 64ch;
+}
+
+.about-safeguards li {
+  padding: 8px 0 8px 22px;
+  position: relative;
+}
+
+.about-safeguards li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.05em;
+  width: 10px;
+  height: 1px;
+  background: var(--about-brass);
+}
+
+.about-prose {
+  max-width: 64ch;
+}
+
+.about-prose p {
+  margin: 0 0 12px;
+}
+
+.about-contact {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.about-contact a {
+  font-family: 'Libre Caslon Text', Georgia, serif;
+  font-size: 1.5rem;
+  color: var(--about-ivory);
+  text-decoration: none;
+  border-bottom: 1px solid var(--about-rule);
+}
+
+.about-contact a:hover {
+  border-bottom-color: var(--about-brass);
+}
+
+.about-contact p {
+  margin: 10px 0 0;
+  color: var(--about-sage);
+  max-width: 60ch;
+}
+
+.about-footer {
+  padding: 28px 0 40px;
+  font-size: 0.85rem;
+  color: var(--about-sage);
+  border-top: 1px solid rgba(238, 232, 218, 0.1);
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+@media (max-width: 860px) {
+  .about-lifecycle ol {
+    grid-template-columns: 1fr;
+    border-top: 0;
+    border-left: 1px solid var(--about-brass);
+    margin-left: 13px;
+    gap: 22px;
+  }
+
+  .about-lifecycle li {
+    padding: 0 0 0 30px;
+  }
+
+  .about-lifecycle li::before {
+    top: 0;
+    left: -14px;
+  }
+
+  .about-section {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .about-features {
+    grid-template-columns: 1fr;
+  }
+
+  .about-wordmark {
+    margin-bottom: 44px;
+  }
+}

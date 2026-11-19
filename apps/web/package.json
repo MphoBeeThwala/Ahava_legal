@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ahava88/shared": "*",
+    "@fontsource/libre-caslon-text": "^5.3.0",
     "axios": "^1.15.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

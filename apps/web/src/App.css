@@ -942,10 +942,42 @@
   }
 }
 
+/* The logo keeps its own shape: full height, natural width (wide logos were
+   squeezed into a square before, which made them small and soft). */
+.brand-home {
+  display: block;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 16px;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.brand-home:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+}
+
 .brand-logo {
+  display: block;
+  box-sizing: border-box;
+  height: 64px;
+  width: auto;
+  max-width: 240px;
   object-fit: contain;
   background: #ffffff;
-  padding: 6px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.brand-home:hover .brand-logo,
+.brand-home:hover .brand-mark {
+  box-shadow:
+    0 0 0 2px var(--focus-ring),
+    0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
 /* ---------------------------------------------------------- identity */
