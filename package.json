@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "drizzle-orm": "^0.45.4",
-    "prettier": "^3.9.10"
+    "prettier": "^3.10.1"
   },
   "overrides": {
     "@esbuild-kit/core-utils": {
