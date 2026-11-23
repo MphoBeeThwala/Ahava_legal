@@ -2,6 +2,7 @@
 //
 // Links in emails always use the firm's own address (firmOrigin), never the
 // request's Host header, so a forged Host cannot redirect a reset link.
+import crypto from 'crypto';
 import { and, asc, desc, eq, gt, isNull, ne, sql } from 'drizzle-orm';
 import type {
   Invite,
@@ -11,7 +12,7 @@ import type {
   StaffUser,
   UserRole,
 } from '@ahava88/shared';
-import { authSettings } from '../config/auth';
+import { authSettings, betaSettings } from '../config/auth';
 import { getFirmBrand } from '../config/brand';
 import { db } from '../db/client';
 import { currentFirm } from '../db/tenant-context';
@@ -22,6 +23,7 @@ import { iso } from '../lib/time';
 import { randomToken, sha256 } from '../lib/tokens';
 import {
   acceptInviteSchema,
+  betaSignupSchema,
   forgotPasswordSchema,
   inviteSchema,
   parse,
@@ -250,6 +252,59 @@ export async function acceptInviteWithPassword(token: string, input: unknown): P
     passwordHash: passwordData.hash,
     passwordSalt: passwordData.salt,
   });
+}
+
+function sameCode(presented: string, expected: string): boolean {
+  const a = Buffer.from(sha256(presented));
+  const b = Buffer.from(sha256(expected));
+  return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * TEMPORARY beta sign-up through the shared link (BETA_OPEN_SIGNUP and
+ * BETA_SIGNUP_CODE; see betaSettings()). Creates a staff account in the
+ * current firm with BETA_SIGNUP_ROLE. Answers 404 when the switch is off.
+ */
+export async function betaSignUp(input: unknown): Promise<UserRow> {
+  const beta = betaSettings();
+  if (!beta.openSignup || !authSettings().passwordLogin) {
+    throw httpError('Not found', 404);
+  }
+  const { code, email, fullName, password } = parse(betaSignupSchema, input);
+  if (!sameCode(code, beta.signupCode)) {
+    throw httpError('This sign-up link is not valid. Ask for a new link.', 403);
+  }
+  if (await authService.findUserByEmail(email)) {
+    throw httpError('An account with that email already exists. Sign in instead.', 409);
+  }
+  await subscriptions.assertSeatAvailable();
+  const passwordData = authService.createPasswordHash(password);
+  const [user] = await db()
+    .insert(users)
+    .values({
+      email,
+      fullName,
+      role: beta.signupRole,
+      passwordHash: passwordData.hash,
+      passwordSalt: passwordData.salt,
+      passwordChangedAt: new Date(),
+    })
+    .onConflictDoNothing({ target: [users.firmId, users.email] })
+    .returning();
+  if (!user) {
+    throw httpError('An account with that email already exists. Sign in instead.', 409);
+  }
+  await auditService.logEventSafely(
+    {
+      entityType: 'user',
+      entityId: user.id,
+      action: 'beta_signup',
+      summary: `Staff account created through the beta sign-up link (${user.role})`,
+      details: { role: user.role },
+    },
+    authService.actorFor(user),
+  );
+  return user;
 }
 
 /** Accepts an invite by linking an Entra External ID identity. */

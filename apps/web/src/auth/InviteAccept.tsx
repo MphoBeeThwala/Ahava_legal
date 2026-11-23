@@ -49,6 +49,8 @@ function InviteAccept({ token, config, onSignedIn, onNotice }: InviteAcceptProps
       );
       if (data.status === 'mfa_enrollment_required') {
         setChallengeToken(data.challengeToken);
+      } else if (data.status === 'signed_in') {
+        onSignedIn(data.user);
       }
     } catch (error) {
       onNotice('error', apiErrorMessage(error, 'Could not accept the invitation.'));
@@ -139,7 +141,11 @@ function InviteAccept({ token, config, onSignedIn, onNotice }: InviteAcceptProps
           </Field>
           <div className="action-row">
             <button type="submit" className="primary-button" disabled={busy}>
-              {busy ? 'Creating your account…' : 'Continue to two-factor set-up'}
+              {busy
+                ? 'Creating your account…'
+                : config.beta.mfaSkipped
+                  ? 'Create my account'
+                  : 'Continue to two-factor set-up'}
             </button>
           </div>
         </form>

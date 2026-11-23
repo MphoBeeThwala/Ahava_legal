@@ -57,6 +57,12 @@ function validateConfig(env: NodeJS.ProcessEnv = process.env): string[] {
   if (env.KEY_PROVIDER === 'azure-keyvault' && !String(env.AZURE_KEY_VAULT_KEY_ID || '').trim()) {
     problems.push('AZURE_KEY_VAULT_KEY_ID must be set when KEY_PROVIDER=azure-keyvault');
   }
+  if (
+    String(env.BETA_OPEN_SIGNUP || '').toLowerCase() === 'true' &&
+    String(env.BETA_SIGNUP_CODE || '').trim().length < 12
+  ) {
+    problems.push('BETA_OPEN_SIGNUP=true needs BETA_SIGNUP_CODE of at least 12 characters');
+  }
   if (env.KEY_PROVIDER && !['local', 'azure-keyvault'].includes(env.KEY_PROVIDER)) {
     problems.push('KEY_PROVIDER must be local or azure-keyvault');
   }
@@ -143,6 +149,16 @@ function configWarnings(env: NodeJS.ProcessEnv = process.env): string[] {
   const warnings: string[] = [];
   if (env.NODE_ENV !== 'production') {
     return warnings;
+  }
+  if (String(env.BETA_SKIP_MFA || '').toLowerCase() === 'true') {
+    warnings.push(
+      'BETA_SKIP_MFA=true: staff sign in WITHOUT two-factor authentication. Beta only: remove it before real firms use the platform',
+    );
+  }
+  if (String(env.BETA_OPEN_SIGNUP || '').toLowerCase() === 'true') {
+    warnings.push(
+      'BETA_OPEN_SIGNUP=true: anyone with the sign-up link can create a staff account. Beta only: remove it before real firms use the platform',
+    );
   }
   if (!String(env.SMTP_URL || '').trim() && !String(env.SMTP2GO_API_KEY || '').trim()) {
     warnings.push(
