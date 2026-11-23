@@ -22,6 +22,7 @@ import {
 } from '@ahava88/shared';
 import { api, apiErrorMessage, apiStatus } from './api';
 import SignIn, { signInErrorMessage } from './auth/SignIn';
+import BetaSignUp from './auth/BetaSignUp';
 import InviteAccept from './auth/InviteAccept';
 import ResetPassword from './auth/ResetPassword';
 import StaffAdmin from './components/StaffAdmin';
@@ -155,6 +156,7 @@ function linkFromPath(pathname: string) {
   const reset = /^\/reset-password\/([^/]+)\/?$/.exec(pathname);
   if (reset) return { kind: 'reset' as const, token: decodeURIComponent(reset[1]!) };
   if (/^\/support\/?$/.test(pathname)) return { kind: 'support' as const, token: '' };
+  if (/^\/signup\/?$/.test(pathname)) return { kind: 'signup' as const, token: '' };
   return null;
 }
 
@@ -250,6 +252,7 @@ function App() {
     passwordLogin: true,
     oidc: { enabled: false, label: '' },
     microsoft: { enabled: false, label: '', enforced: false },
+    beta: { mfaSkipped: false, openSignup: false },
     selfServiceReset: false,
   });
   const [link, setLink] = useState(() => linkFromPath(window.location.pathname));
@@ -693,6 +696,13 @@ function App() {
               <InviteAccept
                 token={link.token}
                 config={authConfig}
+                onSignedIn={handleSignedIn}
+                onNotice={(tone, message) => setAuthNotice({ tone, message })}
+              />
+            ) : link?.kind === 'signup' ? (
+              <BetaSignUp
+                config={authConfig}
+                code={new URLSearchParams(window.location.search).get('code') ?? ''}
                 onSignedIn={handleSignedIn}
                 onNotice={(tone, message) => setAuthNotice({ tone, message })}
               />

@@ -31,6 +31,37 @@ export function authSettings() {
   };
 }
 
+const BETA_SIGNUP_ROLES = ['admin', 'attorney', 'paralegal', 'secretary', 'bookkeeper'] as const;
+export type BetaSignupRole = (typeof BETA_SIGNUP_ROLES)[number];
+export const BETA_SIGNUP_CODE_MIN_LENGTH = 12;
+
+/**
+ * TEMPORARY switches for the limited beta on staging. Both default to off and
+ * must be switched off again before real firms use the platform:
+ *
+ * - BETA_SKIP_MFA=true: password sign-in, invite acceptance and beta sign-up
+ *   issue a session straight away, without the authenticator step. The MFA
+ *   code stays in place; removing the variable brings it back for everyone
+ *   (staff who never enrolled are sent through enrolment at their next sign-in).
+ * - BETA_OPEN_SIGNUP=true with BETA_SIGNUP_CODE (12+ characters): anyone with
+ *   the link /signup?code=<code> can create a staff account in the firm whose
+ *   address they use, with the role BETA_SIGNUP_ROLE (default attorney).
+ *
+ * Operators (platform console) and client-portal sign-in are not affected.
+ */
+export function betaSettings() {
+  const code = (process.env.BETA_SIGNUP_CODE || '').trim();
+  const role = (process.env.BETA_SIGNUP_ROLE || '').trim().toLowerCase();
+  return {
+    skipMfa: flag('BETA_SKIP_MFA', false),
+    openSignup: flag('BETA_OPEN_SIGNUP', false) && code.length >= BETA_SIGNUP_CODE_MIN_LENGTH,
+    signupCode: code,
+    signupRole: (BETA_SIGNUP_ROLES as readonly string[]).includes(role)
+      ? (role as BetaSignupRole)
+      : ('attorney' as BetaSignupRole),
+  };
+}
+
 export interface OidcSettings {
   issuer: string;
   clientId: string;

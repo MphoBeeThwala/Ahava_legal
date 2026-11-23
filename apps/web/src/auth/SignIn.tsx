@@ -231,7 +231,9 @@ function SignIn({ config, onSignedIn, onNotice }: SignInProps) {
         </form>
       ) : null}
       <div className="field-hint">
-        Accounts are by invitation only.{' '}
+        {config.beta.openSignup
+          ? 'Beta testers: use the sign-up link you were sent to create your account.'
+          : 'Accounts are by invitation only.'}{' '}
         {config.selfServiceReset ? '' : 'For a password reset, ask your administrator.'}
       </div>
     </div>

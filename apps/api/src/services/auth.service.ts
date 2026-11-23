@@ -1,10 +1,12 @@
 // Staff authentication.
 //
 // - Accounts exist only through invites (user.service.ts); there is no public
-//   registration.
+//   registration, except the temporary beta sign-up link (BETA_OPEN_SIGNUP).
 // - Email + password sign-in always continues to a second factor: an
 //   authenticator-app code (TOTP) or a one-time recovery code. A user without
 //   MFA is sent through enrolment before any session is issued.
+//   TEMPORARY exception: with BETA_SKIP_MFA=true (staging beta only) the
+//   second factor is skipped. See betaSettings() in config/auth.ts.
 // - Entra External ID sign-in (oidc.service.ts) relies on Entra's own MFA.
 // - Repeated failures lock the account for LOGIN_LOCKOUT_MINUTES.
 // - Sessions are server-side and revocable (session.service.ts).
@@ -27,7 +29,7 @@ import {
 } from '@ahava88/shared';
 import { HttpError, errorMessage, httpError } from '../lib/http';
 import { requireSecret } from '../config/env';
-import { authSettings, oidcSettings, workforceSettings } from '../config/auth';
+import { authSettings, betaSettings, oidcSettings, workforceSettings } from '../config/auth';
 import { getFirmBrand } from '../config/brand';
 import { db } from '../db/client';
 import { setPrincipal } from '../db/tenant';
@@ -227,8 +229,15 @@ async function readChallenge(token: string, purpose: ChallengePurpose): Promise<
 
 // ---------------------------------------------------------------- sign-in
 
-/** Step 1: email + password. Never returns a session; MFA comes next. */
-export async function signInWithPassword(input: unknown): Promise<SignInResult> {
+/**
+ * The outcome of the password step: an MFA challenge, or (only with the
+ * temporary BETA_SKIP_MFA switch) a user to start a session for.
+ */
+export type PasswordStep =
+  Exclude<SignInResult, { status: 'signed_in' }> | { status: 'session'; user: UserRow };
+
+/** Step 1: email + password. MFA comes next (unless the beta switch skips it). */
+export async function signInWithPassword(input: unknown): Promise<PasswordStep> {
   if (!authSettings().passwordLogin) {
     throw httpError('Password sign-in is disabled for this workspace', 403);
   }
@@ -260,6 +269,14 @@ export async function signInWithPassword(input: unknown): Promise<SignInResult> 
     throw httpError(INVALID_CREDENTIALS, 401);
   }
 
+  if (betaSettings().skipMfa) {
+    return { status: 'session', user: await recordSignIn(user, 'password') };
+  }
+  return mfaStep(user);
+}
+
+/** The MFA step a password user goes through next: verify, or enrol first. */
+export function mfaStep(user: UserRow): Exclude<SignInResult, { status: 'signed_in' }> {
   if (user.mfaEnabledAt) {
     return { status: 'mfa_required', challengeToken: issueChallenge(user, 'mfa') };
   }
@@ -540,5 +557,6 @@ export function getAuthConfig(): AuthConfig {
       enforced: Boolean(microsoft) && firm.ssoEnforced,
     },
     selfServiceReset: authSettings().passwordLogin && mailEnabled(),
+    beta: { mfaSkipped: betaSettings().skipMfa, openSignup: betaSettings().openSignup },
   };
 }

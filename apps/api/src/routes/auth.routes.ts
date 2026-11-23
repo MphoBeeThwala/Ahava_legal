@@ -20,6 +20,8 @@ router.post('/password/forgot', authLimiter, authController.forgotPassword);
 router.post('/password/reset/:token', authLimiter, authController.resetPassword);
 router.get('/invites/:token', authLimiter, authController.previewInvite);
 router.post('/invites/:token/accept', authLimiter, authController.acceptInvite);
+// TEMPORARY beta sign-up link; 404 unless BETA_OPEN_SIGNUP is on.
+router.post('/beta-signup', authLimiter, authController.betaSignUp);
 router.get('/oidc/start', authLimiter, authController.oidcStart);
 router.get('/oidc/callback', authLimiter, authController.oidcCallback);
 

@@ -296,6 +296,19 @@ export interface AuthConfig {
   microsoft: { enabled: boolean; label: string; enforced: boolean };
   /** Self-service password reset needs outgoing email. */
   selfServiceReset: boolean;
+  /**
+   * Temporary beta switches (staging only): sign-in without the authenticator
+   * step, and sign-up through a shared link. Both off outside the beta.
+   */
+  beta: { mfaSkipped: boolean; openSignup: boolean };
+}
+
+/** Beta sign-up through a shared link (/signup?code=...). */
+export interface BetaSignupRequest {
+  code: string;
+  email: string;
+  fullName: string;
+  password: string;
 }
 
 /**

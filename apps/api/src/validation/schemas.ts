@@ -105,6 +105,14 @@ export const acceptInviteSchema = z.object({
   password: passwordSchema,
 });
 
+/** Beta sign-up through a shared link (temporary; see betaSettings()). */
+export const betaSignupSchema = z.object({
+  code: z.string().trim().min(1).max(200),
+  email,
+  fullName: requiredText(200),
+  password: passwordSchema,
+});
+
 export const userUpdateSchema = z
   .object({
     role: staffRole.optional(),

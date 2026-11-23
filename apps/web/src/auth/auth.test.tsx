@@ -5,11 +5,13 @@ import { api } from '../api';
 import SignIn, { signInErrorMessage } from './SignIn';
 import MfaSetup from './MfaSetup';
 import InviteAccept from './InviteAccept';
+import BetaSignUp from './BetaSignUp';
 
 const config: AuthConfig = {
   passwordLogin: true,
   oidc: { enabled: true, label: 'Sign in with Microsoft' },
   microsoft: { enabled: false, label: '', enforced: false },
+  beta: { mfaSkipped: false, openSignup: false },
   selfServiceReset: true,
 };
 
@@ -96,4 +98,30 @@ test('Entra sign-in errors map to plain messages', () => {
   expect(signInErrorMessage('not_invited')).toMatch(/not linked/);
   expect(signInErrorMessage('something_else')).toMatch(/did not complete/);
   expect(signInErrorMessage(null)).toBeNull();
+});
+
+test('beta sign-up link creates the account and signs in when MFA is skipped', async () => {
+  const post = vi.spyOn(api, 'post').mockResolvedValueOnce({ data: { status: 'signed_in', user } });
+  const onSignedIn = vi.fn();
+  const beta = { ...config, beta: { mfaSkipped: true, openSignup: true } };
+  render(<BetaSignUp config={beta} code="the-code" onSignedIn={onSignedIn} onNotice={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Ada' } });
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ada@example.com' } });
+  fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'Secret-password-1' } });
+  fireEvent.change(screen.getByLabelText('Confirm password'), {
+    target: { value: 'Secret-password-1' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Create my account' }));
+  await waitFor(() => expect(onSignedIn).toHaveBeenCalledWith(user));
+  expect(post).toHaveBeenCalledWith('/auth/beta-signup', {
+    code: 'the-code',
+    email: 'ada@example.com',
+    fullName: 'Ada',
+    password: 'Secret-password-1',
+  });
+});
+
+test('beta sign-up page says sign-up is closed when the switch is off', () => {
+  render(<BetaSignUp config={config} code="the-code" onSignedIn={vi.fn()} onNotice={vi.fn()} />);
+  expect(screen.getByText(/Sign-up is not open/)).toBeInTheDocument();
 });

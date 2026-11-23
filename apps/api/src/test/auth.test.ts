@@ -48,6 +48,7 @@ describe('no self sign-up', () => {
       oidc: { enabled: false, label: '' },
       microsoft: { enabled: false, label: '', enforced: false },
       selfServiceReset: true,
+      beta: { mfaSkipped: false, openSignup: false },
     });
   });
 });

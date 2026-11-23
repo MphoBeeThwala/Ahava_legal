@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import type { MeResponse, SignInResult } from '@ahava88/shared';
 import { httpError, sendError } from '../lib/http';
+import { betaSettings } from '../config/auth';
+import type { UserRow } from '../db/schema';
 import * as authService from '../services/auth.service';
 import * as sessionService from '../services/session.service';
 import * as userService from '../services/user.service';
@@ -29,9 +31,42 @@ export const config = handle(async (_req, res) => {
   res.status(200).json(authService.getAuthConfig());
 });
 
+/** Starts a session and answers signed_in. */
+async function startSession(req: Request, res: Response, user: UserRow, status: number) {
+  await sessionService.createSession(user, 'password', req, res);
+  const result: SignInResult = { status: 'signed_in', user: authService.toPublicUser(user) };
+  res.status(status).json(result);
+}
+
+/**
+ * After a new password account: MFA enrolment, or (temporary BETA_SKIP_MFA)
+ * a session straight away.
+ */
+async function afterNewAccount(req: Request, res: Response, user: UserRow) {
+  if (betaSettings().skipMfa) {
+    await startSession(req, res, await authService.recordSignIn(user, 'password'), 201);
+    return;
+  }
+  const result: SignInResult = {
+    status: 'mfa_enrollment_required',
+    challengeToken: authService.issueChallenge(user, 'mfa_enroll'),
+  };
+  res.status(201).json(result);
+}
+
 export const login = handle(async (req, res) => {
-  const result: SignInResult = await authService.signInWithPassword(req.body);
+  const step = await authService.signInWithPassword(req.body);
+  if (step.status === 'session') {
+    await startSession(req, res, step.user, 200);
+    return;
+  }
+  const result: SignInResult = step;
   res.status(200).json(result);
+});
+
+export const betaSignUp = handle(async (req, res) => {
+  const user = await userService.betaSignUp(req.body);
+  await afterNewAccount(req, res, user);
 });
 
 export const verifyMfa = handle(async (req, res) => {
@@ -119,12 +154,8 @@ export const previewInvite = handle(async (req, res) => {
 
 export const acceptInvite = handle(async (req, res) => {
   const user = await userService.acceptInviteWithPassword(String(req.params.token), req.body);
-  // New accounts set up MFA before their first session.
-  const result: SignInResult = {
-    status: 'mfa_enrollment_required',
-    challengeToken: authService.issueChallenge(user, 'mfa_enroll'),
-  };
-  res.status(201).json(result);
+  // New accounts set up MFA before their first session (unless the beta switch skips it).
+  await afterNewAccount(req, res, user);
 });
 
 export const oidcStart = handle(async (req, res) => {
